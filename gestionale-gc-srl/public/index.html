@@ -160,6 +160,21 @@
   .empty-state { text-align:center; padding:50px 20px; color:var(--gray-400); }
   .empty-state-icon { font-size:42px; margin-bottom:10px; }
 
+  /* ── SEARCH ── */
+  .search-bar { display:flex; gap:10px; margin-bottom:20px; }
+  .search-bar input { flex:1; padding:12px 16px; border:2px solid var(--gray-300); border-radius:10px; font-size:15px; font-family:inherit; }
+  .search-bar input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(30,64,175,0.1); }
+  .search-results-count { font-size:13px; color:var(--gray-500); margin-bottom:12px; }
+  .search-result { background:white; border-radius:var(--radius); padding:14px 18px; margin-bottom:8px; box-shadow:var(--shadow); border-left:4px solid var(--gray-300); cursor:pointer; transition:all 0.15s; }
+  .search-result:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+  .search-result.status-da_fare { border-left-color:var(--warning); }
+  .search-result.status-in_corso { border-left-color:var(--primary-mid); }
+  .search-result.status-completato { border-left-color:var(--success); }
+  .search-result-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .search-result-client { font-weight:700; font-size:14px; }
+  .search-result-date { font-size:12px; color:var(--gray-500); }
+  .search-result-meta { font-size:12px; color:var(--gray-500); line-height:1.6; }
+
   /* ── TOAST ── */
   .toast { position:fixed; bottom:20px; right:20px; background:var(--gray-800); color:white; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:500; box-shadow:var(--shadow-lg); z-index:300; opacity:0; transform:translateY(10px); transition:all 0.3s; pointer-events:none; }
   .toast.show { opacity:1; transform:translateY(0); }
@@ -239,6 +254,7 @@
     <div class="header-right">
       <button class="view-toggle active" data-view="calendar" onclick="setView('calendar',this)">📅 Calendario</button>
       <button class="view-toggle" data-view="day" onclick="setView('day',this)">📋 Giornata</button>
+      <button class="view-toggle" data-view="search" onclick="setView('search',this)">🔍 Cerca</button>
       <div class="user-pill" onclick="toggleUserMenu(event)">
         <div class="mini-avatar" id="userAvatar"></div>
         <span id="userName"></span>
@@ -260,6 +276,7 @@
     <div class="main-content">
       <div id="calendarView"></div>
       <div id="dayView" style="display:none"></div>
+      <div id="searchView" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -549,7 +566,7 @@ async function changePin() {
 async function renderApp() {
   workers = await API.workers();
   await renderSidebar();
-  if (currentView==='calendar') renderCalendar(); else renderDayView();
+  if (currentView==='calendar') renderCalendar(); else if (currentView==='search') renderSearchView(); else renderDayView();
 }
 
 async function renderSidebar() {
@@ -587,6 +604,7 @@ async function fetchJobsForMonth() {
 async function renderCalendar() {
   document.getElementById('calendarView').style.display='';
   document.getElementById('dayView').style.display='none';
+  document.getElementById('searchView').style.display='none';
   await fetchJobsForMonth();
   const y=currentDate.getFullYear(),m=currentDate.getMonth();
   const firstDay=new Date(y,m,1); let startDay=firstDay.getDay()-1; if(startDay<0)startDay=6;
@@ -618,6 +636,7 @@ async function renderCalendar() {
 async function renderDayView() {
   document.getElementById('calendarView').style.display='none';
   document.getElementById('dayView').style.display='';
+  document.getElementById('searchView').style.display='none';
   const ds=fmtDate(currentDate); const params={from:ds,to:ds};
   if(selectedWorker) params.worker_id=selectedWorker;
   if(filterStatus!=='all') params.status=filterStatus;
@@ -727,6 +746,68 @@ async function removeWorker(id, name) {
   showToast(name + ' rimosso');
   openManageWorkersModal(); // refresh the list
   renderApp();
+}
+
+// ═══ SEARCH ═══
+let searchTimeout = null;
+
+function renderSearchView() {
+  document.getElementById('calendarView').style.display='none';
+  document.getElementById('dayView').style.display='none';
+  document.getElementById('searchView').style.display='';
+
+  // Only render the search bar if it's not already there (preserve input)
+  if (!document.getElementById('searchInput')) {
+    document.getElementById('searchView').innerHTML =
+      '<div style="margin-bottom:6px;font-size:20px;font-weight:700">Cerca Interventi</div>'+
+      '<div class="search-bar"><input type="text" id="searchInput" placeholder="Cerca per cliente, indirizzo, telefono, data..." autofocus></div>'+
+      '<div id="searchResultsCount" class="search-results-count"></div>'+
+      '<div id="searchResults"></div>';
+    document.getElementById('searchInput').addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(()=> doSearch(this.value), 300);
+    });
+    document.getElementById('searchInput').focus();
+  }
+}
+
+async function doSearch(query) {
+  const q = query.trim();
+  const countEl = document.getElementById('searchResultsCount');
+  const resultsEl = document.getElementById('searchResults');
+
+  if (q.length < 2) {
+    countEl.textContent = '';
+    resultsEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>Digita almeno 2 caratteri per cercare</p></div>';
+    return;
+  }
+
+  const results = await API.get('/api/search?q=' + encodeURIComponent(q));
+
+  if (!results.length) {
+    countEl.textContent = 'Nessun risultato';
+    resultsEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Nessun intervento trovato per "'+q+'"</p></div>';
+    return;
+  }
+
+  countEl.textContent = results.length + ' risultat' + (results.length === 1 ? 'o' : 'i') + ' trovati';
+  resultsEl.innerHTML = results.map(j =>
+    '<div class="search-result status-'+j.status+'" onclick="showDetail('+j.id+')">'+
+      '<div class="search-result-header">'+
+        '<span class="search-result-client">'+j.client+'</span>'+
+        '<span class="search-result-date">'+fmtDateIT(j.date)+' '+j.time.substring(0,5)+'</span>'+
+      '</div>'+
+      '<div class="search-result-meta">'+
+        '📍 '+j.address+'<br>'+
+        '👷 '+(j.worker_name||'Non assegnato')+
+        (j.phone ? ' &nbsp; 📞 '+j.phone : '')+
+      '</div>'+
+      '<div class="job-badges" style="margin-top:6px">'+
+        '<span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span>'+
+        '<span class="badge badge-type">'+j.type+'</span>'+
+      '</div>'+
+    '</div>'
+  ).join('');
 }
 
 // ═══ MOBILE ═══
