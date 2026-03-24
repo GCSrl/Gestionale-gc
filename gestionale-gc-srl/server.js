@@ -239,9 +239,7 @@ app.delete('/api/jobs/:id/photos', requireOffice, (req,res)=>{
   saveDB(db);
   res.json({ok:true});
 });
-
-
-    
+ 
 // ── Search ──
 app.get('/api/search', requireAuth, (req,res)=>{
   const db=getDB(); const q=(req.query.q||'').toLowerCase().trim();
