@@ -1,0 +1,12 @@
+{
+  "name": "gestionale-gc-srl",
+  "version": "1.0.0",
+  "description": "Gestionale G.C. srl - Ristrutturazione Bagni",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

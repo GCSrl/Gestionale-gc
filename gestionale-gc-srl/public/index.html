@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionale G.C. srl</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+<style>
+  :root {
+    --primary: #1e40af; --primary-dark: #1e3a8a; --primary-light: #dbeafe; --primary-mid: #3b82f6;
+    --success: #16a34a; --success-light: #dcfce7;
+    --warning: #d97706; --warning-light: #fef3c7;
+    --danger: #dc2626; --danger-light: #fee2e2;
+    --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db;
+    --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151;
+    --gray-800: #1f2937; --gray-900: #111827;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  .login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--primary) 0%,#0f172a 100%); padding:20px; }
+  .login-box { background:white; border-radius:16px; padding:40px; width:100%; max-width:420px; box-shadow:var(--shadow-lg); text-align:center; }
+  .login-logo { font-size:48px; margin-bottom:8px; }
+  .login-title { font-size:24px; font-weight:800; color:var(--primary-dark); margin-bottom:4px; }
+  .login-subtitle { font-size:14px; color:var(--gray-500); margin-bottom:28px; }
+  .login-section-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--gray-400); margin:18px 0 10px; font-weight:600; text-align:left; }
+  .login-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .login-user { display:flex; align-items:center; gap:10px; padding:12px; border:2px solid var(--gray-200); border-radius:10px; cursor:pointer; transition:all 0.15s; text-align:left; }
+  .login-user:hover { border-color:var(--primary-mid); background:var(--primary-light); }
+  .login-user .avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:white; flex-shrink:0; }
+  .login-user .info { font-size:13px; }
+  .login-user .info .name { font-weight:600; }
+  .login-user .info .role { font-size:11px; color:var(--gray-500); }
+
+  /* PIN screen */
+  .pin-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--primary) 0%,#0f172a 100%); padding:20px; }
+  .pin-box { background:white; border-radius:16px; padding:40px; width:100%; max-width:340px; box-shadow:var(--shadow-lg); text-align:center; }
+  .pin-avatar { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:20px; color:white; margin:0 auto 12px; }
+  .pin-name { font-size:18px; font-weight:700; margin-bottom:4px; }
+  .pin-role-label { font-size:13px; color:var(--gray-500); margin-bottom:20px; }
+  .pin-input { width:100%; padding:14px; border:2px solid var(--gray-300); border-radius:10px; font-size:24px; text-align:center; letter-spacing:12px; font-family:inherit; margin-bottom:8px; }
+  .pin-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(30,64,175,0.1); }
+  .pin-error { color:var(--danger); font-size:13px; min-height:20px; margin-bottom:10px; }
+  .pin-back { background:none; border:none; color:var(--gray-500); cursor:pointer; font-size:13px; margin-top:8px; }
+  .pin-back:hover { color:var(--primary); }
+
+  /* ── HEADER ── */
+  .header { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-md); }
+  .header-left { display:flex; align-items:center; gap:10px; }
+  .header h1 { font-size:18px; font-weight:700; }
+  .header-icon { font-size:24px; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .user-pill { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.15); padding:5px 14px 5px 5px; border-radius:20px; font-size:13px; cursor:pointer; transition:background 0.2s; position:relative; }
+  .user-pill:hover { background:rgba(255,255,255,0.25); }
+  .user-pill .mini-avatar { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:white; background:rgba(255,255,255,0.3); }
+  .user-menu { position:absolute; top:100%; right:0; margin-top:6px; background:white; border-radius:10px; box-shadow:var(--shadow-lg); min-width:180px; overflow:hidden; display:none; z-index:200; }
+  .user-menu.open { display:block; }
+  .user-menu-item { padding:10px 16px; font-size:13px; color:var(--gray-700); cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .user-menu-item:hover { background:var(--gray-50); }
+  .view-toggle { background:rgba(255,255,255,0.15); border:none; color:white; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:500; transition:background 0.2s; }
+  .view-toggle:hover { background:rgba(255,255,255,0.3); }
+  .view-toggle.active { background:rgba(255,255,255,0.35); }
+
+  /* ── LAYOUT ── */
+  .app-layout { display:flex; height:calc(100vh - 58px); }
+  .sidebar { width:250px; background:white; border-right:1px solid var(--gray-200); padding:16px 14px; overflow-y:auto; flex-shrink:0; }
+  .sidebar h3 { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--gray-400); margin-bottom:10px; font-weight:600; }
+  .worker-item { display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:8px; cursor:pointer; transition:background 0.15s; margin-bottom:1px; font-size:13px; }
+  .worker-item:hover { background:var(--gray-100); }
+  .worker-item.selected { background:var(--primary-light); color:var(--primary-dark); font-weight:600; }
+  .worker-avatar { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; color:white; flex-shrink:0; }
+  .worker-count { margin-left:auto; background:var(--gray-200); color:var(--gray-600); font-size:10px; padding:2px 7px; border-radius:10px; font-weight:600; }
+  .worker-item.selected .worker-count { background:var(--primary); color:white; }
+  .stats-box { background:var(--gray-50); border-radius:var(--radius); padding:12px; margin-bottom:16px; }
+  .stat-row { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; }
+  .stat-row .label { color:var(--gray-500); }
+  .stat-row .value { font-weight:700; }
+  .main-content { flex:1; overflow-y:auto; padding:20px; }
+
+  /* ── TOOLBAR ── */
+  .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; border:none; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .btn-primary { background:var(--primary); color:white; }
+  .btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .btn-outline { background:white; color:var(--gray-700); border:1px solid var(--gray-300); }
+  .btn-outline:hover { background:var(--gray-50); }
+  .btn-sm { padding:5px 11px; font-size:12px; }
+  .btn-danger { background:var(--danger); color:white; }
+  .btn-danger:hover { background:#b91c1c; }
+  .btn-success { background:var(--success); color:white; }
+  .btn-success:hover { background:#15803d; }
+  .date-nav { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .date-nav input[type="date"] { padding:7px 10px; border:1px solid var(--gray-300); border-radius:8px; font-size:13px; font-family:inherit; }
+  .nav-btn { width:32px; height:32px; border-radius:8px; border:1px solid var(--gray-300); background:white; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .nav-btn:hover { background:var(--gray-100); }
+  .filter-tabs { display:flex; gap:3px; }
+  .filter-tab { padding:5px 12px; border-radius:20px; border:none; font-size:11px; font-weight:600; cursor:pointer; background:var(--gray-100); color:var(--gray-600); transition:all 0.15s; }
+  .filter-tab:hover { background:var(--gray-200); }
+  .filter-tab.active { background:var(--primary); color:white; }
+
+  /* ── CALENDAR ── */
+  .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--gray-200); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  .cal-header { background:var(--primary); color:white; padding:8px; text-align:center; font-weight:600; font-size:12px; }
+  .cal-day { background:white; min-height:100px; padding:6px; cursor:pointer; transition:background 0.15s; }
+  .cal-day:hover { background:var(--gray-50); }
+  .cal-day.today { background:var(--primary-light); }
+  .cal-day.other-month { background:var(--gray-50); color:var(--gray-400); }
+  .cal-day-number { font-size:12px; font-weight:600; margin-bottom:3px; }
+  .cal-day.today .cal-day-number span { background:var(--primary); color:white; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; }
+  .cal-event { font-size:10px; padding:2px 5px; border-radius:4px; margin-bottom:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .cal-event.status-da_fare { background:var(--warning-light); color:#92400e; }
+  .cal-event.status-in_corso { background:var(--primary-light); color:var(--primary); }
+  .cal-event.status-completato { background:var(--success-light); color:#166534; }
+
+  /* ── DAY VIEW ── */
+  .day-view-title { font-size:20px; font-weight:700; margin-bottom:14px; }
+  .job-card { background:white; border-radius:var(--radius); padding:16px 18px; margin-bottom:10px; box-shadow:var(--shadow); border-left:4px solid var(--gray-300); cursor:pointer; transition:all 0.15s; display:flex; gap:14px; align-items:flex-start; }
+  .job-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+  .job-card.status-da_fare { border-left-color:var(--warning); }
+  .job-card.status-in_corso { border-left-color:var(--primary-mid); }
+  .job-card.status-completato { border-left-color:var(--success); }
+  .job-time { font-size:14px; font-weight:700; color:var(--primary); min-width:48px; }
+  .job-info { flex:1; min-width:0; }
+  .job-title { font-size:14px; font-weight:700; margin-bottom:3px; }
+  .job-meta { font-size:12px; color:var(--gray-500); line-height:1.6; }
+  .job-badges { display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
+  .badge { font-size:10px; padding:2px 9px; border-radius:20px; font-weight:600; }
+  .badge-da_fare { background:var(--warning-light); color:#92400e; }
+  .badge-in_corso { background:var(--primary-light); color:var(--primary); }
+  .badge-completato { background:var(--success-light); color:#166534; }
+  .badge-type { background:var(--gray-100); color:var(--gray-600); }
+  .job-actions { display:flex; gap:5px; flex-shrink:0; }
+
+  /* ── MODAL ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:14px; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+  .modal-header { padding:18px 22px; border-bottom:1px solid var(--gray-200); display:flex; justify-content:space-between; align-items:center; }
+  .modal-header h2 { font-size:17px; font-weight:700; }
+  .modal-close { width:30px; height:30px; border-radius:8px; border:none; background:var(--gray-100); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+  .modal-close:hover { background:var(--gray-200); }
+  .modal-body { padding:22px; }
+  .modal-footer { padding:14px 22px; border-top:1px solid var(--gray-200); display:flex; justify-content:flex-end; gap:8px; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:12px; font-weight:600; color:var(--gray-700); margin-bottom:4px; }
+  .form-group input, .form-group select, .form-group textarea { width:100%; padding:8px 11px; border:1px solid var(--gray-300); border-radius:8px; font-size:13px; font-family:inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(30,64,175,0.1); }
+  .form-group textarea { resize:vertical; min-height:60px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .detail-section { margin-bottom:14px; }
+  .detail-section h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--gray-400); margin-bottom:4px; }
+  .detail-value { font-size:14px; line-height:1.5; }
+  .materials-list { list-style:none; }
+  .materials-list li { padding:4px 0; border-bottom:1px solid var(--gray-100); font-size:13px; }
+  .empty-state { text-align:center; padding:50px 20px; color:var(--gray-400); }
+  .empty-state-icon { font-size:42px; margin-bottom:10px; }
+
+  /* ── TOAST ── */
+  .toast { position:fixed; bottom:20px; right:20px; background:var(--gray-800); color:white; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:500; box-shadow:var(--shadow-lg); z-index:300; opacity:0; transform:translateY(10px); transition:all 0.3s; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateY(0); }
+
+  /* ── MOBILE ── */
+  .mobile-header { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; padding:16px 20px; }
+  .mobile-header h2 { font-size:18px; font-weight:700; }
+  .mobile-date { font-size:13px; opacity:0.8; margin-top:2px; }
+  .mobile-job { background:white; margin:10px 14px; border-radius:12px; padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--gray-300); }
+  .mobile-job.status-da_fare { border-left-color:var(--warning); }
+  .mobile-job.status-in_corso { border-left-color:var(--primary-mid); }
+  .mobile-job.status-completato { border-left-color:var(--success); }
+  .mobile-job-time { font-size:22px; font-weight:800; color:var(--primary); }
+  .mobile-job-client { font-size:16px; font-weight:700; margin:4px 0; }
+  .mobile-job-addr { font-size:14px; color:var(--gray-600); margin-bottom:8px; }
+  .mobile-job-details { font-size:13px; color:var(--gray-500); line-height:1.6; }
+  .mobile-job-actions { display:flex; gap:8px; margin-top:12px; }
+  .mobile-job-actions .btn { flex:1; justify-content:center; padding:10px; }
+  .mobile-nav-date { display:flex; align-items:center; justify-content:center; gap:16px; padding:12px; background:white; border-bottom:1px solid var(--gray-200); }
+  .mobile-nav-date button { width:36px; height:36px; border-radius:50%; border:1px solid var(--gray-300); background:white; font-size:18px; cursor:pointer; }
+  .mobile-nav-date span { font-size:15px; font-weight:600; min-width:180px; text-align:center; }
+  .mobile-bottom-bar { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--gray-200); display:flex; justify-content:space-around; padding:8px 0; z-index:50; }
+  .mobile-bottom-btn { background:none; border:none; font-size:11px; color:var(--gray-500); cursor:pointer; padding:4px 12px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .mobile-bottom-btn span { font-size:20px; }
+  .mobile-bottom-btn.active { color:var(--primary); font-weight:600; }
+
+  @media (max-width: 768px) {
+    .sidebar { display:none; }
+    .app-layout { flex-direction:column; }
+    .main-content { padding:14px; }
+    .toolbar { flex-direction:column; align-items:stretch; gap:8px; }
+    .date-nav { margin-left:0; justify-content:center; }
+    .form-row { grid-template-columns:1fr; }
+    .job-card { flex-direction:column; }
+    .job-actions { margin-top:8px; }
+    .cal-day { min-height:65px; padding:3px; }
+    .header h1 { font-size:15px; }
+    .login-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🔧</div>
+    <div class="login-title">Gestionale G.C. srl</div>
+    <div class="login-subtitle">Ristrutturazione Bagni</div>
+    <div class="login-section-title">Ufficio</div>
+    <div class="login-grid" id="loginOffice"></div>
+    <div class="login-section-title">Operai</div>
+    <div class="login-grid" id="loginWorkers"></div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div id="pinScreen" class="pin-screen" style="display:none">
+  <div class="pin-box">
+    <div class="pin-avatar" id="pinAvatar"></div>
+    <div class="pin-name" id="pinName"></div>
+    <div class="pin-role-label" id="pinRole"></div>
+    <input type="password" inputmode="numeric" class="pin-input" id="pinInput" maxlength="8" placeholder="----" autocomplete="off">
+    <div class="pin-error" id="pinError"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitPin()">Accedi</button>
+    <button class="pin-back" onclick="backToLogin()">Torna alla scelta utente</button>
+  </div>
+</div>
+
+<!-- OFFICE APP -->
+<div id="appScreen" style="display:none">
+  <div class="header">
+    <div class="header-left">
+      <span class="header-icon">🔧</span>
+      <h1>Gestionale G.C. srl</h1>
+    </div>
+    <div class="header-right">
+      <button class="view-toggle active" data-view="calendar" onclick="setView('calendar',this)">📅 Calendario</button>
+      <button class="view-toggle" data-view="day" onclick="setView('day',this)">📋 Giornata</button>
+      <div class="user-pill" onclick="toggleUserMenu(event)">
+        <div class="mini-avatar" id="userAvatar"></div>
+        <span id="userName"></span>
+        <div class="user-menu" id="userMenu">
+          <div class="user-menu-item" onclick="event.stopPropagation();openChangePinModal()">🔑 Cambia PIN</div>
+          <div class="user-menu-item" onclick="event.stopPropagation();logout()">🚪 Esci</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="app-layout">
+    <div class="sidebar">
+      <div class="stats-box" id="statsBox"></div>
+      <h3>Filtra per operaio</h3>
+      <div id="workerList"></div>
+      <button class="btn btn-outline" style="width:100%;margin-top:14px" onclick="openWorkerModal()">+ Aggiungi persona</button>
+    </div>
+    <div class="main-content">
+      <div id="calendarView"></div>
+      <div id="dayView" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE WORKER APP -->
+<div id="mobileScreen" style="display:none">
+  <div class="mobile-header">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2 id="mobileWorkerName"></h2>
+        <div class="mobile-date" id="mobileDate"></div>
+      </div>
+      <div class="user-pill" onclick="toggleUserMenu(event)" style="font-size:12px">
+        Impostazioni
+        <div class="user-menu" id="userMenuMobile">
+          <div class="user-menu-item" onclick="event.stopPropagation();openChangePinModal()">🔑 Cambia PIN</div>
+          <div class="user-menu-item" onclick="event.stopPropagation();logout()">🚪 Esci</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mobile-nav-date">
+    <button onclick="mobileChangeDay(-1)">‹</button>
+    <span id="mobileDateLabel"></span>
+    <button onclick="mobileChangeDay(1)">›</button>
+  </div>
+  <div id="mobileJobs" style="padding-bottom:30px"></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="jobModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="jobModalTitle">Nuovo Intervento</h2><button class="modal-close" onclick="closeModal('jobModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="jobId">
+      <div class="form-row">
+        <div class="form-group"><label>Cliente *</label><input type="text" id="jobClient" placeholder="Nome cliente"></div>
+        <div class="form-group"><label>Telefono</label><input type="tel" id="jobPhone" placeholder="Numero telefono"></div>
+      </div>
+      <div class="form-group"><label>Indirizzo *</label><input type="text" id="jobAddress" placeholder="Via, numero, città"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Data *</label><input type="date" id="jobDate"></div>
+        <div class="form-group"><label>Ora</label><input type="time" id="jobTime" value="08:00"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tipo intervento</label><select id="jobType"><option>Ristrutturazione completa</option><option>Sostituzione sanitari</option><option>Impianto idraulico</option><option>Piastrellatura</option><option>Assistenza</option><option>Sopralluogo</option><option>Altro</option></select></div>
+        <div class="form-group"><label>Operaio assegnato *</label><select id="jobWorker"></select></div>
+      </div>
+      <div class="form-group"><label>Stato</label><select id="jobStatus"><option value="da_fare">Da fare</option><option value="in_corso">In corso</option><option value="completato">Completato</option></select></div>
+      <div class="form-group"><label>Materiali necessari</label><textarea id="jobMaterials" placeholder="Piatto doccia 80x120, miscelatore..."></textarea></div>
+      <div class="form-group"><label>Note</label><textarea id="jobNotes" placeholder="Note per l'operaio..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('jobModal')">Annulla</button><button class="btn btn-primary" onclick="saveJob()">Salva</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="detailTitle"></h2><button class="modal-close" onclick="closeModal('detailModal')">✕</button></div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer" id="detailFooter"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="workerModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Aggiungi Persona</h2><button class="modal-close" onclick="closeModal('workerModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome e Cognome *</label><input type="text" id="workerName" placeholder="Mario Rossi"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Ruolo</label><select id="workerRole"><option value="operaio">Operaio</option><option value="ufficio">Ufficio</option></select></div>
+        <div class="form-group"><label>Specializzazione</label><input type="text" id="workerSpec" placeholder="Idraulica, Piastrellista..."></div>
+      </div>
+      <div class="form-group"><label>PIN di accesso</label><input type="text" id="workerPin" placeholder="1234" maxlength="8" inputmode="numeric"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('workerModal')">Annulla</button><button class="btn btn-primary" onclick="saveWorker()">Aggiungi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="changePinModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2>Cambia PIN</h2><button class="modal-close" onclick="closeModal('changePinModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>PIN attuale</label><input type="password" inputmode="numeric" id="oldPin" maxlength="8" placeholder="****"></div>
+      <div class="form-group"><label>Nuovo PIN</label><input type="password" inputmode="numeric" id="newPin" maxlength="8" placeholder="****"></div>
+      <div class="form-group"><label>Conferma nuovo PIN</label><input type="password" inputmode="numeric" id="confirmPin" maxlength="8" placeholder="****"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('changePinModal')">Annulla</button><button class="btn btn-primary" onclick="changePin()">Salva PIN</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ API ═══
+let authToken = null;
+
+const API = {
+  _headers() {
+    const h = { 'Content-Type': 'application/json' };
+    if (authToken) h['Authorization'] = 'Bearer ' + authToken;
+    return h;
+  },
+  async _fetch(url, opts = {}) {
+    opts.headers = this._headers();
+    const r = await fetch(url, opts);
+    if (r.status === 401) { logout(); throw new Error('Sessione scaduta'); }
+    return r.json();
+  },
+  get: (url) => API._fetch(url),
+  post: (url, data) => API._fetch(url, { method:'POST', body:JSON.stringify(data) }),
+  put: (url, data) => API._fetch(url, { method:'PUT', body:JSON.stringify(data) }),
+  patch: (url, data) => API._fetch(url, { method:'PATCH', body:JSON.stringify(data) }),
+  del: (url) => API._fetch(url, { method:'DELETE' }),
+
+  users: () => fetch('/api/users').then(r=>r.json()),
+  login: (userId, pin) => fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId,pin}) }).then(r=>r.json()),
+  workers: () => API.get('/api/workers'),
+  stats: (date) => API.get('/api/stats?date='+date),
+  jobs: (p) => API.get('/api/jobs?'+new URLSearchParams(p)),
+  createJob: (d) => API.post('/api/jobs',d),
+  updateJob: (id,d) => API.put('/api/jobs/'+id,d),
+  updateStatus: (id,s) => API.patch('/api/jobs/'+id+'/status',{status:s}),
+  deleteJob: (id) => API.del('/api/jobs/'+id),
+  createWorker: (d) => API.post('/api/workers',d),
+  mySchedule: (wId,date) => API.get('/api/my-schedule/'+wId+'?date='+date),
+};
+
+// ═══ STATE ═══
+let currentUser = null;
+let selectedLoginUser = null;
+let workers = [];
+let currentView = 'calendar';
+let currentDate = new Date();
+let selectedWorker = null;
+let filterStatus = 'all';
+let cachedJobs = [];
+
+const statusLabels = { da_fare:'Da fare', in_corso:'In corso', completato:'Completato' };
+const dayNames = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+const dayNamesFull = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+const monthNames = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+function fmtDate(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDateIT(s) { const [y,m,d]=s.split('-'); return d+'/'+m+'/'+y; }
+function parseDate(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function initials(name) { return name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase(); }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+document.addEventListener('click', () => { document.querySelectorAll('.user-menu').forEach(m=>m.classList.remove('open')); });
+
+function showScreen(id) {
+  ['loginScreen','pinScreen','appScreen','mobileScreen'].forEach(s=>document.getElementById(s).style.display='none');
+  document.getElementById(id).style.display='';
+}
+
+function toggleUserMenu(e) {
+  e.stopPropagation();
+  const menu = e.currentTarget.querySelector('.user-menu');
+  if (menu) menu.classList.toggle('open');
+}
+
+// ═══ LOGIN FLOW ═══
+async function initLogin() {
+  const users = await API.users();
+  const office = users.filter(w=>w.role==='ufficio');
+  const operai = users.filter(w=>w.role==='operaio');
+
+  document.getElementById('loginOffice').innerHTML = office.map(w=>
+    '<div class="login-user" onclick="selectUser('+w.id+')"><div class="avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><div class="info"><div class="name">'+w.name+'</div><div class="role">'+w.spec+'</div></div></div>'
+  ).join('');
+
+  document.getElementById('loginWorkers').innerHTML = operai.map(w=>
+    '<div class="login-user" onclick="selectUser('+w.id+')"><div class="avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><div class="info"><div class="name">'+w.name+'</div><div class="role">'+w.spec+'</div></div></div>'
+  ).join('');
+
+  // Check saved token
+  const saved = localStorage.getItem('gc_token');
+  const savedUser = localStorage.getItem('gc_user');
+  if (saved && savedUser) {
+    authToken = saved;
+    try {
+      currentUser = JSON.parse(savedUser);
+      workers = await API.workers();
+      enterApp();
+    } catch(e) { authToken = null; localStorage.removeItem('gc_token'); localStorage.removeItem('gc_user'); }
+  }
+}
+
+function selectUser(userId) {
+  API.users().then(users => {
+    selectedLoginUser = users.find(u => u.id === userId);
+    if (!selectedLoginUser) return;
+    document.getElementById('pinAvatar').style.background = selectedLoginUser.color;
+    document.getElementById('pinAvatar').textContent = initials(selectedLoginUser.name);
+    document.getElementById('pinName').textContent = selectedLoginUser.name;
+    document.getElementById('pinRole').textContent = selectedLoginUser.spec;
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+    showScreen('pinScreen');
+    document.getElementById('pinInput').focus();
+  });
+}
+
+function backToLogin() { selectedLoginUser = null; showScreen('loginScreen'); }
+
+async function submitPin() {
+  const pin = document.getElementById('pinInput').value;
+  if (!pin) { document.getElementById('pinError').textContent = 'Inserisci il PIN'; return; }
+
+  const result = await API.login(selectedLoginUser.id, pin);
+  if (result.error) {
+    document.getElementById('pinError').textContent = result.error;
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+    return;
+  }
+
+  authToken = result.token;
+  currentUser = result.user;
+  localStorage.setItem('gc_token', authToken);
+  localStorage.setItem('gc_user', JSON.stringify(currentUser));
+
+  workers = await API.workers();
+  enterApp();
+}
+
+// Enter on PIN input
+document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitPin(); });
+
+function enterApp() {
+  if (currentUser.role === 'ufficio') {
+    showScreen('appScreen');
+    document.getElementById('userName').textContent = currentUser.name;
+    document.getElementById('userAvatar').textContent = initials(currentUser.name);
+    document.getElementById('userAvatar').style.background = currentUser.color;
+    renderApp();
+  } else {
+    showScreen('mobileScreen');
+    renderMobile();
+  }
+}
+
+function logout() {
+  API.post('/api/logout', {}).catch(()=>{});
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('gc_token');
+  localStorage.removeItem('gc_user');
+  showScreen('loginScreen');
+  document.querySelectorAll('.user-menu').forEach(m=>m.classList.remove('open'));
+}
+
+// ═══ CHANGE PIN ═══
+function openChangePinModal() {
+  document.getElementById('oldPin').value='';
+  document.getElementById('newPin').value='';
+  document.getElementById('confirmPin').value='';
+  document.querySelectorAll('.user-menu').forEach(m=>m.classList.remove('open'));
+  openModal('changePinModal');
+}
+
+async function changePin() {
+  const oldP = document.getElementById('oldPin').value;
+  const newP = document.getElementById('newPin').value;
+  const confP = document.getElementById('confirmPin').value;
+  if (!oldP || !newP) { showToast('Compila tutti i campi'); return; }
+  if (newP !== confP) { showToast('I PIN non corrispondono'); return; }
+  if (newP.length < 4) { showToast('PIN minimo 4 cifre'); return; }
+  const r = await API.post('/api/change-pin', { oldPin: oldP, newPin: newP });
+  if (r.error) { showToast(r.error); return; }
+  closeModal('changePinModal');
+  showToast('PIN aggiornato!');
+}
+
+// ═══ OFFICE APP ═══
+async function renderApp() {
+  workers = await API.workers();
+  await renderSidebar();
+  if (currentView==='calendar') renderCalendar(); else renderDayView();
+}
+
+async function renderSidebar() {
+  const today = fmtDate(new Date());
+  const stats = await API.stats(today);
+  document.getElementById('statsBox').innerHTML =
+    '<div class="stat-row"><span class="label">Oggi</span><span class="value">'+stats.total+' interventi</span></div>'+
+    '<div class="stat-row"><span class="label">Da fare</span><span class="value" style="color:var(--warning)">'+stats.da_fare+'</span></div>'+
+    '<div class="stat-row"><span class="label">In corso</span><span class="value" style="color:var(--primary-mid)">'+stats.in_corso+'</span></div>'+
+    '<div class="stat-row"><span class="label">Completati</span><span class="value" style="color:var(--success)">'+stats.completato+'</span></div>';
+
+  const operai = workers.filter(w=>w.role==='operaio');
+  document.getElementById('workerList').innerHTML =
+    '<div class="worker-item '+(selectedWorker===null?'selected':'')+'" onclick="selectWorker(null)"><div class="worker-avatar" style="background:var(--gray-400)">👥</div><span>Tutti</span></div>'+
+    operai.map(w=>'<div class="worker-item '+(selectedWorker===w.id?'selected':'')+'" onclick="selectWorker('+w.id+')"><div class="worker-avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><span>'+w.name.split(' ')[0]+'</span></div>').join('');
+}
+
+function selectWorker(id) { selectedWorker=id; renderApp(); }
+function setFilter(f) { filterStatus=f; renderApp(); }
+function setView(v,btn) { currentView=v; document.querySelectorAll('.view-toggle').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderApp(); }
+function changeMonth(d) { currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+d,1); renderApp(); }
+function changeDay(d) { currentDate.setDate(currentDate.getDate()+d); renderApp(); }
+function goToToday() { currentDate=new Date(); renderApp(); }
+function goToDay(ds) { currentDate=parseDate(ds); currentView='day'; document.querySelectorAll('.view-toggle').forEach(b=>b.classList.remove('active')); document.querySelector('[data-view="day"]').classList.add('active'); renderApp(); }
+
+async function fetchJobsForMonth() {
+  const y=currentDate.getFullYear(),m=currentDate.getMonth();
+  const from=fmtDate(new Date(y,m-1,20)), to=fmtDate(new Date(y,m+1,15));
+  const params={from,to};
+  if(selectedWorker) params.worker_id=selectedWorker;
+  if(filterStatus!=='all') params.status=filterStatus;
+  cachedJobs = await API.jobs(params);
+}
+
+async function renderCalendar() {
+  document.getElementById('calendarView').style.display='';
+  document.getElementById('dayView').style.display='none';
+  await fetchJobsForMonth();
+  const y=currentDate.getFullYear(),m=currentDate.getMonth();
+  const firstDay=new Date(y,m,1); let startDay=firstDay.getDay()-1; if(startDay<0)startDay=6;
+  const daysInMonth=new Date(y,m+1,0).getDate(); const today=fmtDate(new Date());
+
+  let h='<div class="toolbar"><button class="btn btn-primary" onclick="openNewJob()">+ Nuovo Intervento</button><div class="filter-tabs">'+
+    '<button class="filter-tab '+(filterStatus==='all'?'active':'')+'" onclick="setFilter(\'all\')">Tutti</button>'+
+    '<button class="filter-tab '+(filterStatus==='da_fare'?'active':'')+'" onclick="setFilter(\'da_fare\')">Da fare</button>'+
+    '<button class="filter-tab '+(filterStatus==='in_corso'?'active':'')+'" onclick="setFilter(\'in_corso\')">In corso</button>'+
+    '<button class="filter-tab '+(filterStatus==='completato'?'active':'')+'" onclick="setFilter(\'completato\')">Completati</button></div>'+
+    '<div class="date-nav"><button class="nav-btn" onclick="changeMonth(-1)">‹</button><strong style="min-width:150px;text-align:center;font-size:15px">'+monthNames[m]+' '+y+'</strong><button class="nav-btn" onclick="changeMonth(1)">›</button><button class="btn btn-outline btn-sm" onclick="goToToday()">Oggi</button></div></div><div class="calendar-grid">';
+  dayNames.forEach(d=>{h+='<div class="cal-header">'+d+'</div>';});
+
+  let dayNum=1-startDay;
+  for(let i=0;i<42;i++){
+    const cellDate=new Date(y,m,dayNum); const ds=fmtDate(cellDate); const isToday=ds===today; const isOther=cellDate.getMonth()!==m;
+    const dayJobs=cachedJobs.filter(j=>j.date===ds).sort((a,b)=>a.time.localeCompare(b.time));
+    h+='<div class="cal-day'+(isToday?' today':'')+(isOther?' other-month':'')+'" onclick="goToDay(\''+ds+'\')">';
+    h+='<div class="cal-day-number">'+(isToday?'<span>'+cellDate.getDate()+'</span>':cellDate.getDate())+'</div>';
+    dayJobs.slice(0,3).forEach(j=>{h+='<div class="cal-event status-'+j.status+'" onclick="event.stopPropagation();showDetail('+j.id+')" title="'+j.client+'">'+j.time.substring(0,5)+' '+j.client+'</div>';});
+    if(dayJobs.length>3) h+='<div style="font-size:10px;color:var(--gray-500);padding:1px 5px">+'+(dayJobs.length-3)+' altri</div>';
+    h+='</div>'; dayNum++;
+    if(dayNum>daysInMonth && i%7===6) break;
+  }
+  h+='</div>';
+  document.getElementById('calendarView').innerHTML=h;
+}
+
+async function renderDayView() {
+  document.getElementById('calendarView').style.display='none';
+  document.getElementById('dayView').style.display='';
+  const ds=fmtDate(currentDate); const params={from:ds,to:ds};
+  if(selectedWorker) params.worker_id=selectedWorker;
+  if(filterStatus!=='all') params.status=filterStatus;
+  const jobs=await API.jobs(params); jobs.sort((a,b)=>a.time.localeCompare(b.time));
+  const d=currentDate;
+
+  let h='<div class="toolbar"><button class="btn btn-primary" onclick="openNewJob()">+ Nuovo Intervento</button><div class="filter-tabs">'+
+    '<button class="filter-tab '+(filterStatus==='all'?'active':'')+'" onclick="setFilter(\'all\')">Tutti</button>'+
+    '<button class="filter-tab '+(filterStatus==='da_fare'?'active':'')+'" onclick="setFilter(\'da_fare\')">Da fare</button>'+
+    '<button class="filter-tab '+(filterStatus==='in_corso'?'active':'')+'" onclick="setFilter(\'in_corso\')">In corso</button>'+
+    '<button class="filter-tab '+(filterStatus==='completato'?'active':'')+'" onclick="setFilter(\'completato\')">Completati</button></div>'+
+    '<div class="date-nav"><button class="nav-btn" onclick="changeDay(-1)">‹</button><input type="date" value="'+ds+'" onchange="goToDay(this.value)"><button class="nav-btn" onclick="changeDay(1)">›</button><button class="btn btn-outline btn-sm" onclick="goToToday()">Oggi</button></div></div>'+
+    '<div class="day-view-title">'+dayNamesFull[d.getDay()]+' '+d.getDate()+' '+monthNames[d.getMonth()]+' '+d.getFullYear()+'</div>';
+
+  if(!jobs.length) { h+='<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nessun intervento programmato</p></div>'; }
+  else { jobs.forEach(j=>{
+    h+='<div class="job-card status-'+j.status+'" onclick="showDetail('+j.id+')"><div class="job-time">'+j.time.substring(0,5)+'</div><div class="job-info"><div class="job-title">'+j.client+'</div><div class="job-meta"><span>📍 '+j.address+'</span><br><span>👷 '+(j.worker_name||'Non assegnato')+'</span>'+(j.phone?' <span>📞 '+j.phone+'</span>':'')+'</div><div class="job-badges"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div></div><div class="job-actions">'+(j.status==='da_fare'?'<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();quickStatus('+j.id+',\'in_corso\')">Avvia</button>':'')+(j.status==='in_corso'?'<button class="btn btn-sm btn-success" onclick="event.stopPropagation();quickStatus('+j.id+',\'completato\')">Completa</button>':'')+'</div></div>';
+  }); }
+  document.getElementById('dayView').innerHTML=h;
+}
+
+async function quickStatus(id,s) { await API.updateStatus(id,s); showToast('Stato: '+statusLabels[s]); renderApp(); }
+
+function openNewJob() {
+  document.getElementById('jobModalTitle').textContent='Nuovo Intervento';
+  document.getElementById('jobId').value='';
+  document.getElementById('jobClient').value='';
+  document.getElementById('jobPhone').value='';
+  document.getElementById('jobAddress').value='';
+  document.getElementById('jobDate').value=fmtDate(currentDate);
+  document.getElementById('jobTime').value='08:00';
+  document.getElementById('jobType').value='Ristrutturazione completa';
+  document.getElementById('jobStatus').value='da_fare';
+  document.getElementById('jobMaterials').value='';
+  document.getElementById('jobNotes').value='';
+  const sel=document.getElementById('jobWorker');
+  sel.innerHTML=workers.filter(w=>w.role==='operaio').map(w=>'<option value="'+w.id+'">'+w.name+'</option>').join('');
+  if(selectedWorker) sel.value=selectedWorker;
+  openModal('jobModal');
+}
+
+async function saveJob() {
+  const data={client:document.getElementById('jobClient').value.trim(),phone:document.getElementById('jobPhone').value.trim(),address:document.getElementById('jobAddress').value.trim(),date:document.getElementById('jobDate').value,time:document.getElementById('jobTime').value,type:document.getElementById('jobType').value,worker_id:parseInt(document.getElementById('jobWorker').value),status:document.getElementById('jobStatus').value,materials:document.getElementById('jobMaterials').value.trim(),notes:document.getElementById('jobNotes').value.trim()};
+  if(!data.client||!data.address){showToast('Compila cliente e indirizzo');return;}
+  const editId=document.getElementById('jobId').value;
+  if(editId){await API.updateJob(editId,data);showToast('Aggiornato');}else{await API.createJob(data);showToast('Creato');}
+  closeModal('jobModal'); renderApp();
+}
+
+async function showDetail(id) {
+  const j=await API.get('/api/jobs/'+id);
+  if(j.error){showToast(j.error);return;}
+  document.getElementById('detailTitle').textContent=j.client;
+  document.getElementById('detailBody').innerHTML='<div style="display:flex;gap:6px;margin-bottom:14px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div><div class="detail-section"><h4>Data e Ora</h4><div class="detail-value">📅 '+fmtDateIT(j.date)+' alle '+j.time.substring(0,5)+'</div></div><div class="detail-section"><h4>Indirizzo</h4><div class="detail-value">📍 '+j.address+'</div></div>'+(j.phone?'<div class="detail-section"><h4>Telefono</h4><div class="detail-value">📞 <a href="tel:'+j.phone+'">'+j.phone+'</a></div></div>':'')+'<div class="detail-section"><h4>Operaio</h4><div class="detail-value">👷 '+(j.worker_name||'Non assegnato')+'</div></div>'+(j.materials?'<div class="detail-section"><h4>Materiali</h4><ul class="materials-list">'+j.materials.split(',').map(m=>'<li>• '+m.trim()+'</li>').join('')+'</ul></div>':'')+(j.notes?'<div class="detail-section"><h4>Note</h4><div class="detail-value">'+j.notes+'</div></div>':'');
+  document.getElementById('detailFooter').innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteJob('+j.id+')">Elimina</button><button class="btn btn-outline" onclick="closeModal(\'detailModal\')">Chiudi</button><button class="btn btn-primary" onclick="editJob('+j.id+')">Modifica</button>';
+  openModal('detailModal');
+}
+
+async function editJob(id) {
+  const j=await API.get('/api/jobs/'+id); closeModal('detailModal');
+  document.getElementById('jobModalTitle').textContent='Modifica Intervento';
+  document.getElementById('jobId').value=j.id;
+  document.getElementById('jobClient').value=j.client;
+  document.getElementById('jobPhone').value=j.phone;
+  document.getElementById('jobAddress').value=j.address;
+  document.getElementById('jobDate').value=j.date;
+  document.getElementById('jobTime').value=j.time;
+  document.getElementById('jobType').value=j.type;
+  document.getElementById('jobStatus').value=j.status;
+  document.getElementById('jobMaterials').value=j.materials;
+  document.getElementById('jobNotes').value=j.notes;
+  const sel=document.getElementById('jobWorker');
+  sel.innerHTML=workers.filter(w=>w.role==='operaio').map(w=>'<option value="'+w.id+'">'+w.name+'</option>').join('');
+  sel.value=j.worker_id;
+  openModal('jobModal');
+}
+
+async function deleteJob(id) { if(!confirm('Eliminare?'))return; await API.deleteJob(id); closeModal('detailModal'); showToast('Eliminato'); renderApp(); }
+
+function openWorkerModal() { document.getElementById('workerName').value=''; document.getElementById('workerRole').value='operaio'; document.getElementById('workerSpec').value=''; document.getElementById('workerPin').value=''; openModal('workerModal'); }
+async function saveWorker() {
+  const name=document.getElementById('workerName').value.trim(); if(!name){showToast('Inserisci il nome');return;}
+  await API.createWorker({name,role:document.getElementById('workerRole').value,spec:document.getElementById('workerSpec').value.trim(),pin:document.getElementById('workerPin').value||'1234'});
+  closeModal('workerModal'); showToast(name+' aggiunto'); renderApp();
+}
+
+// ═══ MOBILE ═══
+let mobileDate = new Date();
+
+async function renderMobile() {
+  const ds=fmtDate(mobileDate), d=mobileDate;
+  document.getElementById('mobileWorkerName').textContent='👷 '+currentUser.name;
+  document.getElementById('mobileDate').textContent=currentUser.spec;
+  document.getElementById('mobileDateLabel').textContent=dayNamesFull[d.getDay()]+' '+d.getDate()+' '+monthNames[d.getMonth()];
+  const data=await API.mySchedule(currentUser.id,ds);
+  if(!data.jobs||!data.jobs.length){document.getElementById('mobileJobs').innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nessun intervento per questa giornata</p></div>';return;}
+  document.getElementById('mobileJobs').innerHTML=data.jobs.map(j=>
+    '<div class="mobile-job status-'+j.status+'"><div class="mobile-job-time">'+j.time.substring(0,5)+'</div><div class="mobile-job-client">'+j.client+'</div><div class="mobile-job-addr">📍 '+j.address+'</div><div class="mobile-job-details">🔧 '+j.type+'<br>'+(j.phone?'📞 <a href="tel:'+j.phone+'">'+j.phone+'</a><br>':'')+(j.materials?'📦 '+j.materials+'<br>':'')+(j.notes?'📝 '+j.notes:'')+'</div><div style="margin-top:8px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span></div><div class="mobile-job-actions">'+(j.status==='da_fare'?'<button class="btn btn-primary" onclick="mobileStatus('+j.id+',\'in_corso\')">▶ Avvia lavoro</button>':'')+(j.status==='in_corso'?'<button class="btn btn-success" onclick="mobileStatus('+j.id+',\'completato\')">✓ Completato</button>':'')+(j.status==='completato'?'<button class="btn btn-outline" disabled>✓ Completato</button>':'')+(j.phone?'<a href="tel:'+j.phone+'" class="btn btn-outline">📞 Chiama</a>':'')+'</div></div>'
+  ).join('');
+}
+
+async function mobileStatus(id,s) { await API.updateStatus(id,s); showToast(statusLabels[s]); renderMobile(); }
+function mobileChangeDay(delta) { mobileDate.setDate(mobileDate.getDate()+delta); renderMobile(); }
+
+// ═══ AUTO-REFRESH ═══
+setInterval(()=>{ if(!currentUser)return; if(currentUser.role==='ufficio') renderApp(); else renderMobile(); }, 30000);
+
+// ═══ INIT ═══
+initLogin();
+</script>
+</body>
+</html>
