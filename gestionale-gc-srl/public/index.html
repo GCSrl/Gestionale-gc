@@ -137,7 +137,7 @@
   .job-actions { display:flex; gap:5px; flex-shrink:0; }
 
   /* ── MODAL ── */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
   .modal-overlay.open { display:flex; }
   .modal { background:white; border-radius:14px; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
   .modal-header { padding:18px 22px; border-bottom:1px solid var(--gray-200); display:flex; justify-content:space-between; align-items:center; }
@@ -155,10 +155,20 @@
   .detail-section { margin-bottom:14px; }
   .detail-section h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--gray-400); margin-bottom:4px; }
   .detail-value { font-size:14px; line-height:1.5; }
+  .detail-value a { color:var(--primary); text-decoration:none; }
+  .detail-value a:hover { text-decoration:underline; }
   .materials-list { list-style:none; }
   .materials-list li { padding:4px 0; border-bottom:1px solid var(--gray-100); font-size:13px; }
   .empty-state { text-align:center; padding:50px 20px; color:var(--gray-400); }
   .empty-state-icon { font-size:42px; margin-bottom:10px; }
+  .photo-section { margin-bottom:14px; }
+  .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:8px; }
+  .photo-item { position:relative; width:100%; padding-bottom:100%; background:var(--gray-100); border-radius:8px; overflow:hidden; }
+  .photo-item img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+  .photo-meta { font-size:10px; color:var(--gray-500); padding:2px 4px; background:rgba(0,0,0,0.05); }
+  .file-input-label { display:inline-block; padding:8px 14px; background:var(--primary-light); color:var(--primary); border:1px dashed var(--primary); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
+  .file-input-label:hover { background:var(--primary); color:white; }
+  #photoInput { display:none; }
 
   /* ── SEARCH ── */
   .search-bar { display:flex; gap:10px; margin-bottom:20px; }
@@ -183,23 +193,29 @@
   .mobile-header { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; padding:16px 20px; }
   .mobile-header h2 { font-size:18px; font-weight:700; }
   .mobile-date { font-size:13px; opacity:0.8; margin-top:2px; }
-  .mobile-job { background:white; margin:10px 14px; border-radius:12px; padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--gray-300); }
+  .mobile-week-nav { display:flex; align-items:center; justify-content:center; gap:16px; padding:12px; background:white; border-bottom:1px solid var(--gray-200); }
+  .mobile-week-nav button { width:36px; height:36px; border-radius:50%; border:1px solid var(--gray-300); background:white; font-size:18px; cursor:pointer; }
+  .mobile-week-nav span { font-size:14px; font-weight:600; min-width:200px; text-align:center; }
+  .mobile-week-container { padding-bottom:20px; }
+  .mobile-day-section { background:white; margin:0; border-bottom:1px solid var(--gray-100); }
+  .mobile-day-header { padding:12px 16px; background:var(--gray-50); border-left:4px solid var(--gray-300); display:flex; justify-content:space-between; align-items:center; }
+  .mobile-day-header.today { background:var(--primary-light); border-left-color:var(--primary); }
+  .mobile-day-name { font-size:14px; font-weight:700; }
+  .mobile-day-date { font-size:12px; color:var(--gray-600); }
+  .mobile-day-header.today .mobile-day-name, .mobile-day-header.today .mobile-day-date { color:var(--primary-dark); }
+  .mobile-day-count { font-size:12px; color:var(--gray-500); background:var(--gray-100); padding:3px 8px; border-radius:6px; }
+  .mobile-day-header.today .mobile-day-count { background:var(--primary); color:white; }
+  .mobile-job { background:white; margin:10px 14px; border-radius:12px; padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--gray-300); cursor:pointer; }
   .mobile-job.status-da_fare { border-left-color:var(--warning); }
   .mobile-job.status-in_corso { border-left-color:var(--primary-mid); }
   .mobile-job.status-completato { border-left-color:var(--success); }
   .mobile-job-time { font-size:22px; font-weight:800; color:var(--primary); }
   .mobile-job-client { font-size:16px; font-weight:700; margin:4px 0; }
-  .mobile-job-addr { font-size:14px; color:var(--gray-600); margin-bottom:8px; }
+  .mobile-job-addr { font-size:14px; color:var(--gray-600); margin-bottom:8px; cursor:pointer; text-decoration:underline; color:var(--primary); }
   .mobile-job-details { font-size:13px; color:var(--gray-500); line-height:1.6; }
-  .mobile-job-actions { display:flex; gap:8px; margin-top:12px; }
-  .mobile-job-actions .btn { flex:1; justify-content:center; padding:10px; }
-  .mobile-nav-date { display:flex; align-items:center; justify-content:center; gap:16px; padding:12px; background:white; border-bottom:1px solid var(--gray-200); }
-  .mobile-nav-date button { width:36px; height:36px; border-radius:50%; border:1px solid var(--gray-300); background:white; font-size:18px; cursor:pointer; }
-  .mobile-nav-date span { font-size:15px; font-weight:600; min-width:180px; text-align:center; }
-  .mobile-bottom-bar { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--gray-200); display:flex; justify-content:space-around; padding:8px 0; z-index:50; }
-  .mobile-bottom-btn { background:none; border:none; font-size:11px; color:var(--gray-500); cursor:pointer; padding:4px 12px; display:flex; flex-direction:column; align-items:center; gap:2px; }
-  .mobile-bottom-btn span { font-size:20px; }
-  .mobile-bottom-btn.active { color:var(--primary); font-weight:600; }
+  .mobile-job-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .mobile-job-actions .btn { flex:1; min-width:120px; justify-content:center; padding:10px; }
+  .mobile-empty-day { padding:16px; text-align:center; color:var(--gray-400); font-size:13px; }
 
   @media (max-width: 768px) {
     .sidebar { display:none; }
@@ -268,7 +284,7 @@
   <div class="app-layout">
     <div class="sidebar">
       <div class="stats-box" id="statsBox"></div>
-      <h3>Filtra per operaio</h3>
+      <h3>Filtra per persona</h3>
       <div id="workerList"></div>
       <button class="btn btn-outline" style="width:100%;margin-top:14px" onclick="openWorkerModal()">+ Aggiungi persona</button>
       <button class="btn btn-outline btn-sm" style="width:100%;margin-top:6px;color:var(--gray-500)" onclick="openManageWorkersModal()">Gestisci persone</button>
@@ -298,12 +314,12 @@
       </div>
     </div>
   </div>
-  <div class="mobile-nav-date">
-    <button onclick="mobileChangeDay(-1)">‹</button>
-    <span id="mobileDateLabel"></span>
-    <button onclick="mobileChangeDay(1)">›</button>
+  <div class="mobile-week-nav">
+    <button onclick="mobileChangeWeek(-1)">‹</button>
+    <span id="mobileWeekLabel"></span>
+    <button onclick="mobileChangeWeek(1)">›</button>
   </div>
-  <div id="mobileJobs" style="padding-bottom:30px"></div>
+  <div class="mobile-week-container" id="mobileWeek"></div>
 </div>
 
 <!-- MODALS -->
@@ -322,12 +338,20 @@
         <div class="form-group"><label>Ora</label><input type="time" id="jobTime" value="08:00"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Tipo intervento</label><select id="jobType"><option>Ristrutturazione completa</option><option>Sostituzione sanitari</option><option>Impianto idraulico</option><option>Piastrellatura</option><option>Assistenza</option><option>Sopralluogo</option><option>Altro</option></select></div>
-        <div class="form-group"><label>Operaio assegnato *</label><select id="jobWorker"></select></div>
+        <div class="form-group"><label>Tipo intervento</label><select id="jobType"><option>Ristrutturazione completa</option><option>Ristrutturazione parziale</option><option>Vasca in doccia</option><option>Vasca in vasca</option><option>Assistenza</option><option>Sopralluogo</option><option>Altro</option></select></div>
+        <div class="form-group"><label>Assegnato a *</label><select id="jobWorker"></select></div>
       </div>
       <div class="form-group"><label>Stato</label><select id="jobStatus"><option value="da_fare">Da fare</option><option value="in_corso">In corso</option><option value="completato">Completato</option></select></div>
       <div class="form-group"><label>Materiali necessari</label><textarea id="jobMaterials" placeholder="Piatto doccia 80x120, miscelatore..."></textarea></div>
       <div class="form-group"><label>Note</label><textarea id="jobNotes" placeholder="Note per l'operaio..."></textarea></div>
+      <div class="photo-section">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:8px">Foto</label>
+        <label class="file-input-label" onclick="event.stopPropagation()">
+          📷 Allega foto
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(event)">
+        </label>
+        <div id="jobPhotoPreview" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('jobModal')">Annulla</button><button class="btn btn-primary" onclick="saveJob()">Salva</button></div>
   </div>
@@ -338,6 +362,14 @@
     <div class="modal-header"><h2 id="detailTitle"></h2><button class="modal-close" onclick="closeModal('detailModal')">✕</button></div>
     <div class="modal-body" id="detailBody"></div>
     <div class="modal-footer" id="detailFooter"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="jobDetailModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="jobDetailTitle"></h2><button class="modal-close" onclick="closeModal('jobDetailModal')">✕</button></div>
+    <div class="modal-body" id="jobDetailBody"></div>
+    <div class="modal-footer" id="jobDetailFooter"></div>
   </div>
 </div>
 
@@ -410,7 +442,9 @@ const API = {
   updateStatus: (id,s) => API.patch('/api/jobs/'+id+'/status',{status:s}),
   deleteJob: (id) => API.del('/api/jobs/'+id),
   createWorker: (d) => API.post('/api/workers',d),
+  uploadPhoto: (jobId, base64) => API.post('/api/jobs/'+jobId+'/photos', { image: base64 }),
   mySchedule: (wId,date) => API.get('/api/my-schedule/'+wId+'?date='+date),
+  myWeek: (wId,start) => API.get('/api/my-week/'+wId+'?start='+start),
 };
 
 // ═══ STATE ═══
@@ -422,6 +456,7 @@ let currentDate = new Date();
 let selectedWorker = null;
 let filterStatus = 'all';
 let cachedJobs = [];
+let pendingPhotos = [];
 
 const statusLabels = { da_fare:'Da fare', in_corso:'In corso', completato:'Completato' };
 const dayNames = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
@@ -435,6 +470,9 @@ function initials(name) { return name.split(' ').map(n=>n[0]).join('').substring
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function encodeAddress(addr) { return encodeURIComponent(addr); }
+function mapsUrl(addr) { return 'https://www.google.com/maps/dir/?api=1&destination='+encodeAddress(addr); }
+
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
 document.addEventListener('click', () => { document.querySelectorAll('.user-menu').forEach(m=>m.classList.remove('open')); });
 
@@ -463,7 +501,6 @@ async function initLogin() {
     '<div class="login-user" onclick="selectUser('+w.id+')"><div class="avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><div class="info"><div class="name">'+w.name+'</div><div class="role">'+w.spec+'</div></div></div>'
   ).join('');
 
-  // Check saved token
   const saved = localStorage.getItem('gc_token');
   const savedUser = localStorage.getItem('gc_user');
   if (saved && savedUser) {
@@ -514,7 +551,6 @@ async function submitPin() {
   enterApp();
 }
 
-// Enter on PIN input
 document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitPin(); });
 
 function enterApp() {
@@ -578,10 +614,10 @@ async function renderSidebar() {
     '<div class="stat-row"><span class="label">In corso</span><span class="value" style="color:var(--primary-mid)">'+stats.in_corso+'</span></div>'+
     '<div class="stat-row"><span class="label">Completati</span><span class="value" style="color:var(--success)">'+stats.completato+'</span></div>';
 
-  const operai = workers.filter(w=>w.role==='operaio');
+  const allPeople = workers;
   document.getElementById('workerList').innerHTML =
     '<div class="worker-item '+(selectedWorker===null?'selected':'')+'" onclick="selectWorker(null)"><div class="worker-avatar" style="background:var(--gray-400)">👥</div><span>Tutti</span></div>'+
-    operai.map(w=>'<div class="worker-item '+(selectedWorker===w.id?'selected':'')+'" onclick="selectWorker('+w.id+')"><div class="worker-avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><span>'+w.name.split(' ')[0]+'</span></div>').join('');
+    allPeople.map(w=>'<div class="worker-item '+(selectedWorker===w.id?'selected':'')+'" onclick="selectWorker('+w.id+')"><div class="worker-avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><span>'+w.name.split(' ')[0]+'</span></div>').join('');
 }
 
 function selectWorker(id) { selectedWorker=id; renderApp(); }
@@ -653,14 +689,39 @@ async function renderDayView() {
 
   if(!jobs.length) { h+='<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nessun intervento programmato</p></div>'; }
   else { jobs.forEach(j=>{
-    h+='<div class="job-card status-'+j.status+'" onclick="showDetail('+j.id+')"><div class="job-time">'+j.time.substring(0,5)+'</div><div class="job-info"><div class="job-title">'+j.client+'</div><div class="job-meta"><span>📍 '+j.address+'</span><br><span>👷 '+(j.worker_name||'Non assegnato')+'</span>'+(j.phone?' <span>📞 '+j.phone+'</span>':'')+'</div><div class="job-badges"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div></div><div class="job-actions">'+(j.status==='da_fare'?'<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();quickStatus('+j.id+',\'in_corso\')">Avvia</button>':'')+(j.status==='in_corso'?'<button class="btn btn-sm btn-success" onclick="event.stopPropagation();quickStatus('+j.id+',\'completato\')">Completa</button>':'')+'</div></div>';
+    h+='<div class="job-card status-'+j.status+'" onclick="showDetail('+j.id+')"><div class="job-time">'+j.time.substring(0,5)+'</div><div class="job-info"><div class="job-title">'+j.client+'</div><div class="job-meta"><span>📍 <a href="'+mapsUrl(j.address)+'" target="_blank" onclick="event.stopPropagation()">'+j.address+'</a></span><br><span>👷 '+(j.worker_name||'Non assegnato')+'</span>'+(j.phone?' <span>📞 '+j.phone+'</span>':'')+'</div><div class="job-badges"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div></div><div class="job-actions">'+(j.status==='da_fare'?'<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();quickStatus('+j.id+',\'in_corso\')">Avvia</button>':'')+(j.status==='in_corso'?'<button class="btn btn-sm btn-success" onclick="event.stopPropagation();quickStatus('+j.id+',\'completato\')">Completa</button>':'')+'</div></div>';
   }); }
   document.getElementById('dayView').innerHTML=h;
 }
 
 async function quickStatus(id,s) { await API.updateStatus(id,s); showToast('Stato: '+statusLabels[s]); renderApp(); }
 
+function handlePhotoUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const base64 = event.target.result;
+    pendingPhotos.push(base64);
+    updatePhotoPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePhotoPreview() {
+  const preview = document.getElementById('jobPhotoPreview');
+  preview.innerHTML = pendingPhotos.map((photo, idx) =>
+    '<div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;background:var(--gray-100)"><img src="'+photo+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removePhoto('+idx+')" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:white;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center">✕</button></div>'
+  ).join('');
+}
+
+function removePhoto(idx) {
+  pendingPhotos.splice(idx, 1);
+  updatePhotoPreview();
+}
+
 function openNewJob() {
+  pendingPhotos = [];
   document.getElementById('jobModalTitle').textContent='Nuovo Intervento';
   document.getElementById('jobId').value='';
   document.getElementById('jobClient').value='';
@@ -672,8 +733,9 @@ function openNewJob() {
   document.getElementById('jobStatus').value='da_fare';
   document.getElementById('jobMaterials').value='';
   document.getElementById('jobNotes').value='';
+  document.getElementById('jobPhotoPreview').innerHTML='';
   const sel=document.getElementById('jobWorker');
-  sel.innerHTML=workers.filter(w=>w.role==='operaio').map(w=>'<option value="'+w.id+'">'+w.name+'</option>').join('');
+  sel.innerHTML=workers.map(w=>'<option value="'+w.id+'">'+w.name+' ('+w.role+')</option>').join('');
   if(selectedWorker) sel.value=selectedWorker;
   openModal('jobModal');
 }
@@ -682,21 +744,55 @@ async function saveJob() {
   const data={client:document.getElementById('jobClient').value.trim(),phone:document.getElementById('jobPhone').value.trim(),address:document.getElementById('jobAddress').value.trim(),date:document.getElementById('jobDate').value,time:document.getElementById('jobTime').value,type:document.getElementById('jobType').value,worker_id:parseInt(document.getElementById('jobWorker').value),status:document.getElementById('jobStatus').value,materials:document.getElementById('jobMaterials').value.trim(),notes:document.getElementById('jobNotes').value.trim()};
   if(!data.client||!data.address){showToast('Compila cliente e indirizzo');return;}
   const editId=document.getElementById('jobId').value;
-  if(editId){await API.updateJob(editId,data);showToast('Aggiornato');}else{await API.createJob(data);showToast('Creato');}
-  closeModal('jobModal'); renderApp();
+  let jobId;
+  if(editId){
+    await API.updateJob(editId,data);
+    jobId = editId;
+    showToast('Aggiornato');
+  }else{
+    const result = await API.createJob(data);
+    jobId = result.id;
+    showToast('Creato');
+  }
+
+  for (const photo of pendingPhotos) {
+    await API.uploadPhoto(jobId, photo);
+  }
+
+  pendingPhotos = [];
+  closeModal('jobModal');
+  renderApp();
 }
 
 async function showDetail(id) {
   const j=await API.get('/api/jobs/'+id);
   if(j.error){showToast(j.error);return;}
   document.getElementById('detailTitle').textContent=j.client;
-  document.getElementById('detailBody').innerHTML='<div style="display:flex;gap:6px;margin-bottom:14px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div><div class="detail-section"><h4>Data e Ora</h4><div class="detail-value">📅 '+fmtDateIT(j.date)+' alle '+j.time.substring(0,5)+'</div></div><div class="detail-section"><h4>Indirizzo</h4><div class="detail-value">📍 '+j.address+'</div></div>'+(j.phone?'<div class="detail-section"><h4>Telefono</h4><div class="detail-value">📞 <a href="tel:'+j.phone+'">'+j.phone+'</a></div></div>':'')+'<div class="detail-section"><h4>Operaio</h4><div class="detail-value">👷 '+(j.worker_name||'Non assegnato')+'</div></div>'+(j.materials?'<div class="detail-section"><h4>Materiali</h4><ul class="materials-list">'+j.materials.split(',').map(m=>'<li>• '+m.trim()+'</li>').join('')+'</ul></div>':'')+(j.notes?'<div class="detail-section"><h4>Note</h4><div class="detail-value">'+j.notes+'</div></div>':'');
+
+  let photoHtml = '';
+  if (j.photos_office && j.photos_office.length) {
+    photoHtml += '<div class="detail-section"><h4>Foto Ufficio</h4><div class="photo-grid">';
+    j.photos_office.forEach(p => {
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
+    });
+    photoHtml += '</div></div>';
+  }
+  if (j.photos_worker && j.photos_worker.length) {
+    photoHtml += '<div class="detail-section"><h4>Foto Operaio</h4><div class="photo-grid">';
+    j.photos_worker.forEach(p => {
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
+    });
+    photoHtml += '</div></div>';
+  }
+
+  document.getElementById('detailBody').innerHTML='<div style="display:flex;gap:6px;margin-bottom:14px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div><div class="detail-section"><h4>Data e Ora</h4><div class="detail-value">📅 '+fmtDateIT(j.date)+' alle '+j.time.substring(0,5)+'</div></div><div class="detail-section"><h4>Indirizzo</h4><div class="detail-value">📍 <a href="'+mapsUrl(j.address)+'" target="_blank">'+j.address+'</a></div></div>'+(j.phone?'<div class="detail-section"><h4>Telefono</h4><div class="detail-value">📞 <a href="tel:'+j.phone+'">'+j.phone+'</a></div></div>':'')+'<div class="detail-section"><h4>Assegnato a</h4><div class="detail-value">👷 '+(j.worker_name||'Non assegnato')+'</div></div>'+(j.materials?'<div class="detail-section"><h4>Materiali</h4><ul class="materials-list">'+j.materials.split(',').map(m=>'<li>• '+m.trim()+'</li>').join('')+'</ul></div>':'')+(j.notes?'<div class="detail-section"><h4>Note</h4><div class="detail-value">'+j.notes+'</div></div>':'')+photoHtml;
   document.getElementById('detailFooter').innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteJob('+j.id+')">Elimina</button><button class="btn btn-outline" onclick="closeModal(\'detailModal\')">Chiudi</button><button class="btn btn-primary" onclick="editJob('+j.id+')">Modifica</button>';
   openModal('detailModal');
 }
 
 async function editJob(id) {
   const j=await API.get('/api/jobs/'+id); closeModal('detailModal');
+  pendingPhotos = [];
   document.getElementById('jobModalTitle').textContent='Modifica Intervento';
   document.getElementById('jobId').value=j.id;
   document.getElementById('jobClient').value=j.client;
@@ -708,8 +804,9 @@ async function editJob(id) {
   document.getElementById('jobStatus').value=j.status;
   document.getElementById('jobMaterials').value=j.materials;
   document.getElementById('jobNotes').value=j.notes;
+  document.getElementById('jobPhotoPreview').innerHTML='';
   const sel=document.getElementById('jobWorker');
-  sel.innerHTML=workers.filter(w=>w.role==='operaio').map(w=>'<option value="'+w.id+'">'+w.name+'</option>').join('');
+  sel.innerHTML=workers.map(w=>'<option value="'+w.id+'">'+w.name+' ('+w.role+')</option>').join('');
   sel.value=j.worker_id;
   openModal('jobModal');
 }
@@ -744,7 +841,7 @@ async function removeWorker(id, name) {
   await API.del('/api/workers/' + id);
   workers = await API.workers();
   showToast(name + ' rimosso');
-  openManageWorkersModal(); // refresh the list
+  openManageWorkersModal();
   renderApp();
 }
 
@@ -756,7 +853,6 @@ function renderSearchView() {
   document.getElementById('dayView').style.display='none';
   document.getElementById('searchView').style.display='';
 
-  // Only render the search bar if it's not already there (preserve input)
   if (!document.getElementById('searchInput')) {
     document.getElementById('searchView').innerHTML =
       '<div style="margin-bottom:6px;font-size:20px;font-weight:700">Cerca Interventi</div>'+
@@ -798,7 +894,7 @@ async function doSearch(query) {
         '<span class="search-result-date">'+fmtDateIT(j.date)+' '+j.time.substring(0,5)+'</span>'+
       '</div>'+
       '<div class="search-result-meta">'+
-        '📍 '+j.address+'<br>'+
+        '📍 <a href="'+mapsUrl(j.address)+'" target="_blank" onclick="event.stopPropagation()">'+j.address+'</a><br>'+
         '👷 '+(j.worker_name||'Non assegnato')+
         (j.phone ? ' &nbsp; 📞 '+j.phone : '')+
       '</div>'+
@@ -810,23 +906,129 @@ async function doSearch(query) {
   ).join('');
 }
 
-// ═══ MOBILE ═══
-let mobileDate = new Date();
+// ═══ MOBILE ─ WEEKLY VIEW ═══
+let mobileWeekStart = new Date();
 
-async function renderMobile() {
-  const ds=fmtDate(mobileDate), d=mobileDate;
-  document.getElementById('mobileWorkerName').textContent='👷 '+currentUser.name;
-  document.getElementById('mobileDate').textContent=currentUser.spec;
-  document.getElementById('mobileDateLabel').textContent=dayNamesFull[d.getDay()]+' '+d.getDate()+' '+monthNames[d.getMonth()];
-  const data=await API.mySchedule(currentUser.id,ds);
-  if(!data.jobs||!data.jobs.length){document.getElementById('mobileJobs').innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nessun intervento per questa giornata</p></div>';return;}
-  document.getElementById('mobileJobs').innerHTML=data.jobs.map(j=>
-    '<div class="mobile-job status-'+j.status+'"><div class="mobile-job-time">'+j.time.substring(0,5)+'</div><div class="mobile-job-client">'+j.client+'</div><div class="mobile-job-addr">📍 '+j.address+'</div><div class="mobile-job-details">🔧 '+j.type+'<br>'+(j.phone?'📞 <a href="tel:'+j.phone+'">'+j.phone+'</a><br>':'')+(j.materials?'📦 '+j.materials+'<br>':'')+(j.notes?'📝 '+j.notes:'')+'</div><div style="margin-top:8px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span></div><div class="mobile-job-actions">'+(j.status==='da_fare'?'<button class="btn btn-primary" onclick="mobileStatus('+j.id+',\'in_corso\')">▶ Avvia lavoro</button>':'')+(j.status==='in_corso'?'<button class="btn btn-success" onclick="mobileStatus('+j.id+',\'completato\')">✓ Completato</button>':'')+(j.status==='completato'?'<button class="btn btn-outline" disabled>✓ Completato</button>':'')+(j.phone?'<a href="tel:'+j.phone+'" class="btn btn-outline">📞 Chiama</a>':'')+'</div></div>'
-  ).join('');
+function getWeekStart(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(date.setDate(diff));
 }
 
-async function mobileStatus(id,s) { await API.updateStatus(id,s); showToast(statusLabels[s]); renderMobile(); }
-function mobileChangeDay(delta) { mobileDate.setDate(mobileDate.getDate()+delta); renderMobile(); }
+function fmtWeekLabel(start) {
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return fmtDateIT(fmtDate(start)) + ' - ' + fmtDateIT(fmtDate(end));
+}
+
+async function renderMobile() {
+  mobileWeekStart = getWeekStart(mobileWeekStart);
+  document.getElementById('mobileWorkerName').textContent='👷 '+currentUser.name;
+  document.getElementById('mobileDate').textContent=currentUser.spec;
+  document.getElementById('mobileWeekLabel').textContent=fmtWeekLabel(mobileWeekStart);
+
+  const weekData = await API.myWeek(currentUser.id, fmtDate(mobileWeekStart));
+
+  let html = '';
+  const today = fmtDate(new Date());
+
+  for (let i = 0; i < 7; i++) {
+    const dayDate = new Date(mobileWeekStart);
+    dayDate.setDate(dayDate.getDate() + i);
+    const ds = fmtDate(dayDate);
+    const isToday = ds === today;
+    const dayJobs = (weekData.jobs || []).filter(j => j.date === ds).sort((a,b) => a.time.localeCompare(b.time));
+
+    html += '<div class="mobile-day-section">';
+    html += '<div class="mobile-day-header '+(isToday?'today':'')+'"><div><div class="mobile-day-name">'+dayNamesFull[dayDate.getDay()]+'</div><div class="mobile-day-date">'+dayDate.getDate()+' '+monthNames[dayDate.getMonth()]+'</div></div><div class="mobile-day-count">'+dayJobs.length+'</div></div>';
+
+    if (dayJobs.length === 0) {
+      html += '<div class="mobile-empty-day">Nessun intervento</div>';
+    } else {
+      dayJobs.forEach(j => {
+        html += '<div class="mobile-job status-'+j.status+'" onclick="showMobileJobDetail('+j.id+')">';
+        html += '<div class="mobile-job-time">'+j.time.substring(0,5)+'</div>';
+        html += '<div class="mobile-job-client">'+j.client+'</div>';
+        html += '<div class="mobile-job-addr" onclick="event.stopPropagation();window.open(\''+mapsUrl(j.address)+'\',\'_blank\')">📍 '+j.address+'</div>';
+        html += '<div class="mobile-job-details">🔧 '+j.type+'<br>'+(j.phone?'📞 <a href="tel:'+j.phone+'">'+j.phone+'</a><br>':'')+(j.materials?'📦 '+j.materials+'<br>':'')+(j.notes?'📝 '+j.notes:'')+'</div>';
+        html += '<div style="margin-top:8px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span></div>';
+        html += '<div class="mobile-job-actions">'+(j.status==='da_fare'?'<button class="btn btn-primary" onclick="event.stopPropagation();mobileStatus('+j.id+',\'in_corso\')">▶ Avvia</button>':'')+(j.status==='in_corso'?'<button class="btn btn-success" onclick="event.stopPropagation();mobileStatus('+j.id+',\'completato\')">✓ Completato</button>':'')+(j.status==='completato'?'<button class="btn btn-outline" disabled>✓ Completato</button>':'')+(j.phone?'<a href="tel:'+j.phone+'" class="btn btn-outline" onclick="event.stopPropagation()">📞 Chiama</a>':'')+'</div>';
+        html += '</div>';
+      });
+    }
+
+    html += '</div>';
+  }
+
+  document.getElementById('mobileWeek').innerHTML = html;
+}
+
+async function showMobileJobDetail(jobId) {
+  const j = await API.get('/api/jobs/' + jobId);
+  if (j.error) { showToast(j.error); return; }
+
+  document.getElementById('jobDetailTitle').textContent = j.client;
+
+  let photoHtml = '';
+  if (j.photos_office && j.photos_office.length) {
+    photoHtml += '<div class="detail-section"><h4>Foto Ufficio</h4><div class="photo-grid">';
+    j.photos_office.forEach(p => {
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"></div>';
+    });
+    photoHtml += '</div></div>';
+  }
+  if (j.photos_worker && j.photos_worker.length) {
+    photoHtml += '<div class="detail-section"><h4>Foto Operaio</h4><div class="photo-grid">';
+    j.photos_worker.forEach(p => {
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"></div>';
+    });
+    photoHtml += '</div></div>';
+  }
+
+  document.getElementById('jobDetailBody').innerHTML =
+    '<div style="display:flex;gap:6px;margin-bottom:14px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div>'+
+    '<div class="detail-section"><h4>Data e Ora</h4><div class="detail-value">📅 '+fmtDateIT(j.date)+' alle '+j.time.substring(0,5)+'</div></div>'+
+    '<div class="detail-section"><h4>Indirizzo</h4><div class="detail-value">📍 <a href="'+mapsUrl(j.address)+'" target="_blank">'+j.address+'</a></div></div>'+
+    (j.phone?'<div class="detail-section"><h4>Telefono</h4><div class="detail-value">📞 <a href="tel:'+j.phone+'">'+j.phone+'</a></div></div>':'')+
+    (j.materials?'<div class="detail-section"><h4>Materiali</h4><ul class="materials-list">'+j.materials.split(',').map(m=>'<li>• '+m.trim()+'</li>').join('')+'</ul></div>':'')+
+    (j.notes?'<div class="detail-section"><h4>Note</h4><div class="detail-value">'+j.notes+'</div></div>':'') +
+    photoHtml +
+    '<div class="detail-section"><h4>Foto Operaio</h4><label class="file-input-label" onclick="event.stopPropagation()">'+
+    '📷 Scatta foto<input type="file" id="mobilePhotoInput" accept="image/*" capture="environment" onchange="handleMobilePhotoUpload('+jobId+',event)">'+
+    '</label></div>';
+
+  document.getElementById('jobDetailFooter').innerHTML =
+    '<button class="btn btn-outline" onclick="closeModal(\'jobDetailModal\')">Chiudi</button>'+
+    '<button class="btn btn-primary" onclick="mobileStatus('+jobId+',\''+{da_fare:'in_corso',in_corso:'completato',completato:'completato'}[j.status]+'\')">'+
+    {da_fare:'▶ Avvia',in_corso:'✓ Completa',completato:'✓ Completato'}[j.status]+'</button>';
+
+  openModal('jobDetailModal');
+}
+
+async function handleMobilePhotoUpload(jobId, e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    const base64 = event.target.result;
+    await API.uploadPhoto(jobId, base64);
+    showToast('Foto salvata');
+    await showMobileJobDetail(jobId);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function mobileStatus(id, s) {
+  await API.updateStatus(id, s);
+  showToast(statusLabels[s]);
+  renderMobile();
+}
+
+function mobileChangeWeek(delta) {
+  mobileWeekStart.setDate(mobileWeekStart.getDate() + (delta * 7));
+  renderMobile();
+}
 
 // ═══ AUTO-REFRESH ═══
 setInterval(()=>{ if(!currentUser)return; if(currentUser.role==='ufficio') renderApp(); else renderMobile(); }, 30000);
