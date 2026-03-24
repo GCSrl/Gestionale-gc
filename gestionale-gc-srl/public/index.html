@@ -938,7 +938,8 @@ async function renderMobile() {
     dayDate.setDate(dayDate.getDate() + i);
     const ds = fmtDate(dayDate);
     const isToday = ds === today;
-    const dayJobs = (weekData.jobs || []).filter(j => j.date === ds).sort((a,b) => a.time.localeCompare(b.time));
+    const dayData = (weekData.days || []).find(d => d.date === ds);
+    const dayJobs = (dayData ? dayData.jobs : []).sort((a,b) => (a.time||'').localeCompare(b.time||''));
 
     html += '<div class="mobile-day-section">';
     html += '<div class="mobile-day-header '+(isToday?'today':'')+'"><div><div class="mobile-day-name">'+dayNamesFull[dayDate.getDay()]+'</div><div class="mobile-day-date">'+dayDate.getDate()+' '+monthNames[dayDate.getMonth()]+'</div></div><div class="mobile-day-count">'+dayJobs.length+'</div></div>';
