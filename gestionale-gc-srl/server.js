@@ -2,16 +2,13 @@ const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'database.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-
 const sessions = new Map();
 function generateToken() { return crypto.randomBytes(32).toString('hex'); }
-
 // ── JSON Database ──
 function loadDB() {
   try { if (fs.existsSync(DB_FILE)) return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch(e) { console.error('DB error:', e.message); }
@@ -23,7 +20,6 @@ function getDB() {
   if (!db) { db = createDefaultDB(); saveDB(db); console.log('Database inizializzato'); }
   return db;
 }
-
 function createDefaultDB() {
   const colors = ['#2563eb','#7c3aed','#db2777','#ea580c','#16a34a','#0891b2','#4f46e5','#c026d3','#059669'];
   const workers = [
@@ -70,12 +66,10 @@ function createDefaultDB() {
   }
   return { workers, jobs, nextWorkerId: 10, nextJobId: id };
 }
-
 // ── Middleware ──
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(UPLOADS_DIR));
-
 function getSessionUser(req) {
   const token = req.headers['authorization']?.replace('Bearer ','');
   if (!token) return null;
@@ -85,7 +79,6 @@ function getSessionUser(req) {
 }
 function requireAuth(req, res, next) { const u = getSessionUser(req); if (!u) return res.status(401).json({error:'Accesso richiesto'}); req.user = u; next(); }
 function requireOffice(req, res, next) { const u = getSessionUser(req); if (!u||u.role!=='ufficio') return res.status(403).json({error:'Riservato ufficio'}); req.user = u; next(); }
-
 // ── Auth ──
 app.get('/api/users', (req, res) => {
   const db = getDB();
@@ -107,7 +100,6 @@ app.post('/api/change-pin', requireAuth, (req,res)=>{
   if(user.pin!==String(oldPin)) return res.status(401).json({error:'PIN attuale errato'});
   user.pin=String(newPin); saveDB(db); res.json({ok:true});
 });
-
 // ── Workers ──
 app.get('/api/workers', requireAuth, (req,res)=>{
   res.json(getDB().workers.filter(w=>w.active!==false).map(w=>({id:w.id,name:w.name,role:w.role,spec:w.spec,color:w.color})));
@@ -131,13 +123,11 @@ app.delete('/api/workers/:id', requireOffice, (req,res)=>{
   const db=getDB(); const w=db.workers.find(x=>x.id===parseInt(req.params.id));
   if(w){w.active=false; saveDB(db);} res.json({ok:true});
 });
-
 // ── Jobs ──
 function enrichJob(j, db) {
   const w = db.workers.find(x=>x.id===j.worker_id);
   return {...j, worker_name:w?w.name:'Non assegnato', worker_color:w?w.color:'#999'};
 }
-
 app.get('/api/jobs', requireAuth, (req,res)=>{
   const db=getDB(); const {from,to,worker_id,status}=req.query;
   const user=req.user; const forceWId=(user.role==='operaio')?user.id:null;
@@ -151,14 +141,12 @@ app.get('/api/jobs', requireAuth, (req,res)=>{
   jobs.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
   res.json(jobs);
 });
-
 app.get('/api/jobs/:id', requireAuth, (req,res)=>{
   const db=getDB(); const j=db.jobs.find(x=>x.id===parseInt(req.params.id));
   if(!j) return res.status(404).json({error:'Non trovato'});
   if(req.user.role==='operaio'&&j.worker_id!==req.user.id) return res.status(403).json({error:'Non autorizzato'});
   res.json(enrichJob(j,db));
 });
-
 app.post('/api/jobs', requireOffice, (req,res)=>{
   const db=getDB(); const {client,phone,address,date,time,type,worker_id,status,materials,notes}=req.body;
   if(!client||!address||!date) return res.status(400).json({error:'Campi obbligatori mancanti'});
@@ -168,7 +156,6 @@ app.post('/api/jobs', requireOffice, (req,res)=>{
   db.jobs.push(job); saveDB(db);
   res.status(201).json(enrichJob(job,db));
 });
-
 app.put('/api/jobs/:id', requireOffice, (req,res)=>{
   const db=getDB(); const idx=db.jobs.findIndex(x=>x.id===parseInt(req.params.id));
   if(idx<0) return res.status(404).json({error:'Non trovato'});
@@ -179,7 +166,6 @@ app.put('/api/jobs/:id', requireOffice, (req,res)=>{
   updated.updated_at=new Date().toISOString(); db.jobs[idx]=updated; saveDB(db);
   res.json(enrichJob(updated,db));
 });
-
 app.patch('/api/jobs/:id/status', requireAuth, (req,res)=>{
   const db=getDB(); const j=db.jobs.find(x=>x.id===parseInt(req.params.id));
   if(!j) return res.status(404).json({error:'Non trovato'});
@@ -188,36 +174,26 @@ app.patch('/api/jobs/:id/status', requireAuth, (req,res)=>{
   j.status=req.body.status; j.updated_at=new Date().toISOString(); saveDB(db);
   res.json(enrichJob(j,db));
 });
-
 app.delete('/api/jobs/:id', requireOffice, (req,res)=>{
   const db=getDB(); db.jobs=db.jobs.filter(x=>x.id!==parseInt(req.params.id)); saveDB(db); res.json({ok:true});
 });
-
 // ── Photos ──
 app.post('/api/jobs/:id/photos', requireAuth, (req,res)=>{
   const db=getDB(); const j=db.jobs.find(x=>x.id===parseInt(req.params.id));
   if(!j) return res.status(404).json({error:'Non trovato'});
-  // Operai can only add to their own jobs
   if(req.user.role==='operaio'&&j.worker_id!==req.user.id) return res.status(403).json({error:'Non autorizzato'});
-
-  const {image, source} = req.body; // image = base64, source = 'office' or 'worker'
+  const {image, source} = req.body;
   if(!image) return res.status(400).json({error:'Immagine mancante'});
-
   const photoSource = req.user.role==='ufficio' ? 'office' : 'worker';
   const filename = `job_${j.id}_${photoSource}_${Date.now()}.jpg`;
   const filepath = path.join(UPLOADS_DIR, filename);
-
-  // Strip base64 header if present
   const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
   fs.writeFileSync(filepath, Buffer.from(base64Data, 'base64'));
-
   const photoUrl = '/uploads/' + filename;
   if(!j.photos_office) j.photos_office=[];
   if(!j.photos_worker) j.photos_worker=[];
-
   if(photoSource==='office') j.photos_office.push({url:photoUrl, date:new Date().toISOString(), by:req.user.name});
   else j.photos_worker.push({url:photoUrl, date:new Date().toISOString(), by:req.user.name});
-
   saveDB(db);
   res.json({ok:true, url:photoUrl, source:photoSource});
 });
@@ -239,7 +215,6 @@ app.delete('/api/jobs/:id/photos', requireOffice, (req,res)=>{
   saveDB(db);
   res.json({ok:true});
 });
- 
 // ── Search ──
 app.get('/api/search', requireAuth, (req,res)=>{
   const db=getDB(); const q=(req.query.q||'').toLowerCase().trim();
@@ -256,21 +231,18 @@ app.get('/api/search', requireAuth, (req,res)=>{
   enriched.sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
   res.json(enriched.slice(0,50));
 });
-
 // ── Stats ──
 app.get('/api/stats', requireAuth, (req,res)=>{
   const db=getDB(); const d=req.query.date||new Date().toISOString().slice(0,10);
   const dj=db.jobs.filter(j=>j.date===d);
   res.json({date:d,total:dj.length,da_fare:dj.filter(j=>j.status==='da_fare').length,in_corso:dj.filter(j=>j.status==='in_corso').length,completato:dj.filter(j=>j.status==='completato').length});
 });
-
 // ── Weekly schedule (for mobile) ──
 app.get('/api/my-week/:workerId', requireAuth, (req,res)=>{
   const db=getDB();
   if(req.user.role==='operaio'&&req.user.id!==parseInt(req.params.workerId)) return res.status(403).json({error:'Non autorizzato'});
   const startDate = req.query.start || new Date().toISOString().slice(0,10);
   const start = new Date(startDate);
-  // Get Monday of the week
   const day = start.getDay(); const diff = start.getDate() - day + (day===0?-6:1);
   const monday = new Date(start); monday.setDate(diff);
   const days = [];
@@ -283,7 +255,6 @@ app.get('/api/my-week/:workerId', requireAuth, (req,res)=>{
   const worker=db.workers.find(w=>w.id===parseInt(req.params.workerId));
   res.json({worker:worker?{id:worker.id,name:worker.name,spec:worker.spec,color:worker.color}:null, weekStart:monday.toISOString().slice(0,10), days});
 });
-
 app.get('/api/my-schedule/:workerId', requireAuth, (req,res)=>{
   const db=getDB();
   if(req.user.role==='operaio'&&req.user.id!==parseInt(req.params.workerId)) return res.status(403).json({error:'Non autorizzato'});
@@ -292,7 +263,6 @@ app.get('/api/my-schedule/:workerId', requireAuth, (req,res)=>{
   const jobs=db.jobs.filter(j=>j.worker_id===parseInt(req.params.workerId)&&j.date===date).sort((a,b)=>a.time.localeCompare(b.time));
   res.json({worker:worker?{id:worker.id,name:worker.name,spec:worker.spec,color:worker.color}:null,date,jobs});
 });
-
 // ── Start ──
 app.listen(PORT,'0.0.0.0',()=>{
   console.log('\n========================================');
