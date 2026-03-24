@@ -221,7 +221,28 @@ app.post('/api/jobs/:id/photos', requireAuth, (req,res)=>{
   saveDB(db);
   res.json({ok:true, url:photoUrl, source:photoSource});
 });
+// ── Delete Photo ──
+app.delete('/api/jobs/:id/photos', requireOffice, (req,res)=>{
+  const db=getDB(); const j=db.jobs.find(x=>x.id===parseInt(req.params.id));
+  if(!j) return res.status(404).json({error:'Non trovato'});
+  const {url, source} = req.body;
+  if(!url||!source) return res.status(400).json({error:'Parametri mancanti'});
+  const arr = source==='office' ? j.photos_office : j.photos_worker;
+  if(arr){
+    const idx = arr.findIndex(p=>p.url===url);
+    if(idx>=0){
+      arr.splice(idx,1);
+      const filepath = path.join(__dirname, url);
+      if(fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    }
+  }
+  saveDB(db);
+  res.json({ok:true});
+});
+```
 
+
+    
 // ── Search ──
 app.get('/api/search', requireAuth, (req,res)=>{
   const db=getDB(); const q=(req.query.q||'').toLowerCase().trim();
