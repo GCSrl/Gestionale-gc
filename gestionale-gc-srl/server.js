@@ -304,6 +304,36 @@ app.patch('/api/jobs/:id/status', requireAuth, (req, res) => {
   res.json({ ...j, worker_name: w ? w.name : '', worker_color: w ? w.color : '' });
 });
 
+// ── API: Search ──
+app.get('/api/search', requireAuth, (req, res) => {
+  const db = getDB();
+  const q = (req.query.q || '').toLowerCase().trim();
+  if (!q || q.length < 2) return res.json([]);
+
+  const user = req.user;
+  let jobs = db.jobs;
+  // Operai can only search their own jobs
+  if (user.role === 'operaio') jobs = jobs.filter(j => j.worker_id === user.id);
+
+  const results = jobs.filter(j => {
+    return j.client.toLowerCase().includes(q)
+      || j.address.toLowerCase().includes(q)
+      || j.phone.toLowerCase().includes(q)
+      || j.date.includes(q)
+      || j.type.toLowerCase().includes(q)
+      || j.notes.toLowerCase().includes(q)
+      || j.materials.toLowerCase().includes(q);
+  });
+
+  // Attach worker names, sort by date desc
+  const enriched = results.map(j => {
+    const w = db.workers.find(x => x.id === j.worker_id);
+    return { ...j, worker_name: w ? w.name : 'Non assegnato', worker_color: w ? w.color : '#999' };
+  });
+  enriched.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+  res.json(enriched.slice(0, 50));
+});
+
 app.delete('/api/jobs/:id', requireOffice, (req, res) => {
   const db = getDB();
   db.jobs = db.jobs.filter(x => x.id !== parseInt(req.params.id));
