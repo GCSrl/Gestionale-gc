@@ -164,12 +164,14 @@
   .photo-section { margin-bottom:14px; }
   .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:8px; }
   .photo-item { position:relative; width:100%; padding-bottom:100%; background:var(--gray-100); border-radius:8px; overflow:hidden; }
-  .photo-item img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+  .photo-item img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; cursor:pointer; }
   .photo-meta { font-size:10px; color:var(--gray-500); padding:2px 4px; background:rgba(0,0,0,0.05); }
   .photo-actions { position:absolute; bottom:4px; right:4px; display:flex; gap:4px; z-index:2; }
   .photo-actions a, .photo-actions button { width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; text-decoration:none; }
   .photo-btn-download { background:rgba(0,120,255,0.85); }
+  .photo-btn-download:hover { background:rgba(0,100,220,1); }
   .photo-btn-delete { background:rgba(220,38,38,0.85); }
+  .photo-btn-delete:hover { background:rgba(200,20,20,1); }
   .file-input-label { display:inline-block; padding:8px 14px; background:var(--primary-light); color:var(--primary); border:1px dashed var(--primary); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
   .file-input-label:hover { background:var(--primary); color:white; }
   #photoInput { display:none; }
@@ -425,7 +427,7 @@ const API = {
     return h;
   },
   async _fetch(url, opts = {}) {
-    opts.headers = this._headers();
+    if (!opts.headers) opts.headers = this._headers();
     const r = await fetch(url, opts);
     if (r.status === 401) { logout(); throw new Error('Sessione scaduta'); }
     return r.json();
@@ -434,7 +436,7 @@ const API = {
   post: (url, data) => API._fetch(url, { method:'POST', body:JSON.stringify(data) }),
   put: (url, data) => API._fetch(url, { method:'PUT', body:JSON.stringify(data) }),
   patch: (url, data) => API._fetch(url, { method:'PATCH', body:JSON.stringify(data) }),
-  del: (url, body) => fetch(API_BASE+url, {method:'DELETE', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:body?JSON.stringify(body):undefined}).then(r=>r.json()),
+  del: (url, body) => API._fetch(url, { method:'DELETE', body: body ? JSON.stringify(body) : undefined }),
 
   users: () => fetch('/api/users').then(r=>r.json()),
   login: (userId, pin) => fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId,pin}) }).then(r=>r.json()),
@@ -445,9 +447,9 @@ const API = {
   updateJob: (id,d) => API.put('/api/jobs/'+id,d),
   updateStatus: (id,s) => API.patch('/api/jobs/'+id+'/status',{status:s}),
   deleteJob: (id) => API.del('/api/jobs/'+id),
+  deletePhoto: (jobId, url, source) => API.del('/api/jobs/'+jobId+'/photos', {url, source}),
   createWorker: (d) => API.post('/api/workers',d),
   uploadPhoto: (jobId, base64) => API.post('/api/jobs/'+jobId+'/photos', { image: base64 }),
-  deletePhoto: (jobId, url, source) => API.del('/api/jobs/'+jobId+'/photos', {url, source}),
   mySchedule: (wId,date) => API.get('/api/my-schedule/'+wId+'?date='+date),
   myWeek: (wId,start) => API.get('/api/my-week/'+wId+'?start='+start),
 };
@@ -769,26 +771,49 @@ async function saveJob() {
   renderApp();
 }
 
+// ═══ PHOTO HELPERS ═══
+function buildPhotoHtml(photos, label, source, jobId, canDelete) {
+  if (!photos || !photos.length) return '';
+  let h = '<div class="detail-section"><h4>'+label+'</h4><div class="photo-grid">';
+  photos.forEach(p => {
+    h += '<div class="photo-item"><img src="'+p.url+'" onclick="window.open(\''+p.url+'\',\'_blank\')">';
+    h += '<div class="photo-actions">';
+    h += '<a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a>';
+    if (canDelete) {
+      h += '<button class="photo-btn-delete" onclick="event.stopPropagation();deletePhoto('+jobId+',\''+p.url.replace(/'/g,"\\'")+'\',\''+source+'\')" title="Elimina">✕</button>';
+    }
+    h += '</div>';
+    if (p.date) h += '<div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div>';
+    h += '</div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+async function deletePhoto(jobId, url, source) {
+  if(!confirm('Eliminare questa foto?')) return;
+  const r = await API.deletePhoto(jobId, url, source);
+  if(r.ok) {
+    showToast('Foto eliminata');
+    // Refresh the detail view
+    if (currentUser.role === 'ufficio') {
+      showDetail(jobId);
+    } else {
+      showMobileJobDetail(jobId);
+    }
+  } else {
+    showToast(r.error||'Errore eliminazione foto');
+  }
+}
+
 async function showDetail(id) {
   const j=await API.get('/api/jobs/'+id);
   if(j.error){showToast(j.error);return;}
   document.getElementById('detailTitle').textContent=j.client;
 
-let photoHtml = '';
-  if (j.photos_office && j.photos_office.length) {
-    photoHtml += '<div class="detail-section"><h4>Foto Ufficio</h4><div class="photo-grid">';
-    j.photos_office.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a><button class="photo-btn-delete" onclick="deletePhoto('+j.id+',\''+p.url+'\',\'office\')" title="Elimina">✕</button></div><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
-    });
-    photoHtml += '</div></div>';
-  }
-  if (j.photos_worker && j.photos_worker.length) {
-    photoHtml += '<div class="detail-section"><h4>Foto Operaio</h4><div class="photo-grid">';
-    j.photos_worker.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a><button class="photo-btn-delete" onclick="deletePhoto('+j.id+',\''+p.url+'\',\'worker\')" title="Elimina">✕</button></div><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
-    });
-    photoHtml += '</div></div>';
-  }
+  const isOffice = currentUser && currentUser.role === 'ufficio';
+  let photoHtml = buildPhotoHtml(j.photos_office, 'Foto Ufficio', 'office', j.id, isOffice);
+  photoHtml += buildPhotoHtml(j.photos_worker, 'Foto Operaio', 'worker', j.id, isOffice);
 
   document.getElementById('detailBody').innerHTML='<div style="display:flex;gap:6px;margin-bottom:14px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div><div class="detail-section"><h4>Data e Ora</h4><div class="detail-value">📅 '+fmtDateIT(j.date)+' alle '+j.time.substring(0,5)+'</div></div><div class="detail-section"><h4>Indirizzo</h4><div class="detail-value">📍 <a href="'+mapsUrl(j.address)+'" target="_blank">'+j.address+'</a></div></div>'+(j.phone?'<div class="detail-section"><h4>Telefono</h4><div class="detail-value">📞 <a href="tel:'+j.phone+'">'+j.phone+'</a></div></div>':'')+'<div class="detail-section"><h4>Assegnato a</h4><div class="detail-value">👷 '+(j.worker_name||'Non assegnato')+'</div></div>'+(j.materials?'<div class="detail-section"><h4>Materiali</h4><ul class="materials-list">'+j.materials.split(',').map(m=>'<li>• '+m.trim()+'</li>').join('')+'</ul></div>':'')+(j.notes?'<div class="detail-section"><h4>Note</h4><div class="detail-value">'+j.notes+'</div></div>':'')+photoHtml;
   document.getElementById('detailFooter').innerHTML='<button class="btn btn-danger btn-sm" onclick="deleteJob('+j.id+')">Elimina</button><button class="btn btn-outline" onclick="closeModal(\'detailModal\')">Chiudi</button><button class="btn btn-primary" onclick="editJob('+j.id+')">Modifica</button>';
@@ -976,21 +1001,9 @@ async function showMobileJobDetail(jobId) {
 
   document.getElementById('jobDetailTitle').textContent = j.client;
 
-let photoHtml = '';
-  if (j.photos_office && j.photos_office.length) {
-    photoHtml += '<div class="detail-section"><h4>Foto Ufficio</h4><div class="photo-grid">';
-    j.photos_office.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a></div></div>';
-    });
-    photoHtml += '</div></div>';
-  }
-  if (j.photos_worker && j.photos_worker.length) {
-    photoHtml += '<div class="detail-section"><h4>Foto Operaio</h4><div class="photo-grid">';
-    j.photos_worker.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a></div></div>';
-    });
-    photoHtml += '</div></div>';
-  }
+  // Mobile: download only, no delete
+  let photoHtml = buildPhotoHtml(j.photos_office, 'Foto Ufficio', 'office', j.id, false);
+  photoHtml += buildPhotoHtml(j.photos_worker, 'Foto Operaio', 'worker', j.id, false);
 
   document.getElementById('jobDetailBody').innerHTML =
     '<div style="display:flex;gap:6px;margin-bottom:14px"><span class="badge badge-'+j.status+'">'+statusLabels[j.status]+'</span><span class="badge badge-type">'+j.type+'</span></div>'+
@@ -1000,7 +1013,7 @@ let photoHtml = '';
     (j.materials?'<div class="detail-section"><h4>Materiali</h4><ul class="materials-list">'+j.materials.split(',').map(m=>'<li>• '+m.trim()+'</li>').join('')+'</ul></div>':'')+
     (j.notes?'<div class="detail-section"><h4>Note</h4><div class="detail-value">'+j.notes+'</div></div>':'') +
     photoHtml +
-    '<div class="detail-section"><h4>Foto Operaio</h4><label class="file-input-label" onclick="event.stopPropagation()">'+
+    '<div class="detail-section"><h4>Carica Foto</h4><label class="file-input-label" onclick="event.stopPropagation()">'+
     '📷 Scatta foto<input type="file" id="mobilePhotoInput" accept="image/*" capture="environment" onchange="handleMobilePhotoUpload('+jobId+',event)">'+
     '</label></div>';
 
@@ -1012,13 +1025,6 @@ let photoHtml = '';
   openModal('jobDetailModal');
 }
 
-async function deletePhoto(jobId, url, source) {
-  if(!confirm('Eliminare questa foto?')) return;
-  const r = await API.deletePhoto(jobId, url, source);
-  if(r.ok) { showToast('Foto eliminata'); showJobDetail(jobId); }
-  else showToast(r.error||'Errore');
-}
-  
 async function handleMobilePhotoUpload(jobId, e) {
   const file = e.target.files[0];
   if (!file) return;
