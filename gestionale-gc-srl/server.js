@@ -239,7 +239,6 @@ app.delete('/api/jobs/:id/photos', requireOffice, (req,res)=>{
   saveDB(db);
   res.json({ok:true});
 });
-```
 
 
     
