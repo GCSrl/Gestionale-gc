@@ -255,6 +255,7 @@
       <h3>Filtra per operaio</h3>
       <div id="workerList"></div>
       <button class="btn btn-outline" style="width:100%;margin-top:14px" onclick="openWorkerModal()">+ Aggiungi persona</button>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:6px;color:var(--gray-500)" onclick="openManageWorkersModal()">Gestisci persone</button>
     </div>
     <div class="main-content">
       <div id="calendarView"></div>
@@ -347,6 +348,14 @@
       <div class="form-group"><label>Conferma nuovo PIN</label><input type="password" inputmode="numeric" id="confirmPin" maxlength="8" placeholder="****"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('changePinModal')">Annulla</button><button class="btn btn-primary" onclick="changePin()">Salva PIN</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="manageWorkersModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Gestisci Persone</h2><button class="modal-close" onclick="closeModal('manageWorkersModal')">✕</button></div>
+    <div class="modal-body" id="manageWorkersList" style="padding:12px 22px"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('manageWorkersModal')">Chiudi</button></div>
   </div>
 </div>
 
@@ -693,6 +702,31 @@ async function saveWorker() {
   const name=document.getElementById('workerName').value.trim(); if(!name){showToast('Inserisci il nome');return;}
   await API.createWorker({name,role:document.getElementById('workerRole').value,spec:document.getElementById('workerSpec').value.trim(),pin:document.getElementById('workerPin').value||'1234'});
   closeModal('workerModal'); showToast(name+' aggiunto'); renderApp();
+}
+
+function openManageWorkersModal() {
+  const operai = workers.filter(w=>w.role==='operaio');
+  const ufficio = workers.filter(w=>w.role==='ufficio');
+  let h = '<div style="margin-bottom:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-400);margin-bottom:8px;font-weight:600">Operai</div>';
+  operai.forEach(w => {
+    h += '<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100)"><div class="worker-avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px">'+w.name+'</div><div style="font-size:12px;color:var(--gray-500)">'+w.spec+'</div></div><button class="btn btn-danger btn-sm" onclick="removeWorker('+w.id+',\''+w.name.replace(/'/g,"\\'")+'\')">Rimuovi</button></div>';
+  });
+  h += '</div><div><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-400);margin-bottom:8px;font-weight:600">Ufficio</div>';
+  ufficio.forEach(w => {
+    h += '<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100)"><div class="worker-avatar" style="background:'+w.color+'">'+initials(w.name)+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px">'+w.name+'</div><div style="font-size:12px;color:var(--gray-500)">'+w.spec+'</div></div>'+(w.id !== currentUser.id ? '<button class="btn btn-danger btn-sm" onclick="removeWorker('+w.id+',\''+w.name.replace(/'/g,"\\'")+'\')">Rimuovi</button>' : '<span style="font-size:11px;color:var(--gray-400)">(tu)</span>')+'</div>';
+  });
+  h += '</div>';
+  document.getElementById('manageWorkersList').innerHTML = h;
+  openModal('manageWorkersModal');
+}
+
+async function removeWorker(id, name) {
+  if (!confirm('Rimuovere ' + name + ' dal gestionale?')) return;
+  await API.del('/api/workers/' + id);
+  workers = await API.workers();
+  showToast(name + ' rimosso');
+  openManageWorkersModal(); // refresh the list
+  renderApp();
 }
 
 // ═══ MOBILE ═══
