@@ -166,6 +166,10 @@
   .photo-item { position:relative; width:100%; padding-bottom:100%; background:var(--gray-100); border-radius:8px; overflow:hidden; }
   .photo-item img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
   .photo-meta { font-size:10px; color:var(--gray-500); padding:2px 4px; background:rgba(0,0,0,0.05); }
+  .photo-actions { position:absolute; bottom:4px; right:4px; display:flex; gap:4px; z-index:2; }
+  .photo-actions a, .photo-actions button { width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; text-decoration:none; }
+  .photo-btn-download { background:rgba(0,120,255,0.85); }
+  .photo-btn-delete { background:rgba(220,38,38,0.85); }
   .file-input-label { display:inline-block; padding:8px 14px; background:var(--primary-light); color:var(--primary); border:1px dashed var(--primary); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
   .file-input-label:hover { background:var(--primary); color:white; }
   #photoInput { display:none; }
@@ -430,7 +434,7 @@ const API = {
   post: (url, data) => API._fetch(url, { method:'POST', body:JSON.stringify(data) }),
   put: (url, data) => API._fetch(url, { method:'PUT', body:JSON.stringify(data) }),
   patch: (url, data) => API._fetch(url, { method:'PATCH', body:JSON.stringify(data) }),
-  del: (url) => API._fetch(url, { method:'DELETE' }),
+  del: (url, body) => fetch(API_BASE+url, {method:'DELETE', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:body?JSON.stringify(body):undefined}).then(r=>r.json()),
 
   users: () => fetch('/api/users').then(r=>r.json()),
   login: (userId, pin) => fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId,pin}) }).then(r=>r.json()),
@@ -443,6 +447,7 @@ const API = {
   deleteJob: (id) => API.del('/api/jobs/'+id),
   createWorker: (d) => API.post('/api/workers',d),
   uploadPhoto: (jobId, base64) => API.post('/api/jobs/'+jobId+'/photos', { image: base64 }),
+  deletePhoto: (jobId, url, source) => API.del('/api/jobs/'+jobId+'/photos', {url, source}),
   mySchedule: (wId,date) => API.get('/api/my-schedule/'+wId+'?date='+date),
   myWeek: (wId,start) => API.get('/api/my-week/'+wId+'?start='+start),
 };
@@ -769,18 +774,18 @@ async function showDetail(id) {
   if(j.error){showToast(j.error);return;}
   document.getElementById('detailTitle').textContent=j.client;
 
-  let photoHtml = '';
+let photoHtml = '';
   if (j.photos_office && j.photos_office.length) {
     photoHtml += '<div class="detail-section"><h4>Foto Ufficio</h4><div class="photo-grid">';
     j.photos_office.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a><button class="photo-btn-delete" onclick="deletePhoto('+j.id+',\''+p.url+'\',\'office\')" title="Elimina">✕</button></div><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
     });
     photoHtml += '</div></div>';
   }
   if (j.photos_worker && j.photos_worker.length) {
     photoHtml += '<div class="detail-section"><h4>Foto Operaio</h4><div class="photo-grid">';
     j.photos_worker.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a><button class="photo-btn-delete" onclick="deletePhoto('+j.id+',\''+p.url+'\',\'worker\')" title="Elimina">✕</button></div><div class="photo-meta">'+fmtDateIT(p.date.split('T')[0])+'</div></div>';
     });
     photoHtml += '</div></div>';
   }
@@ -971,18 +976,18 @@ async function showMobileJobDetail(jobId) {
 
   document.getElementById('jobDetailTitle').textContent = j.client;
 
-  let photoHtml = '';
+let photoHtml = '';
   if (j.photos_office && j.photos_office.length) {
     photoHtml += '<div class="detail-section"><h4>Foto Ufficio</h4><div class="photo-grid">';
     j.photos_office.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"></div>';
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a></div></div>';
     });
     photoHtml += '</div></div>';
   }
   if (j.photos_worker && j.photos_worker.length) {
     photoHtml += '<div class="detail-section"><h4>Foto Operaio</h4><div class="photo-grid">';
     j.photos_worker.forEach(p => {
-      photoHtml += '<div class="photo-item"><img src="'+p.url+'"></div>';
+      photoHtml += '<div class="photo-item"><img src="'+p.url+'"><div class="photo-actions"><a class="photo-btn-download" href="'+p.url+'" download title="Scarica">⬇</a></div></div>';
     });
     photoHtml += '</div></div>';
   }
@@ -1007,6 +1012,13 @@ async function showMobileJobDetail(jobId) {
   openModal('jobDetailModal');
 }
 
+async function deletePhoto(jobId, url, source) {
+  if(!confirm('Eliminare questa foto?')) return;
+  const r = await API.deletePhoto(jobId, url, source);
+  if(r.ok) { showToast('Foto eliminata'); showJobDetail(jobId); }
+  else showToast(r.error||'Errore');
+}
+  
 async function handleMobilePhotoUpload(jobId, e) {
   const file = e.target.files[0];
   if (!file) return;
