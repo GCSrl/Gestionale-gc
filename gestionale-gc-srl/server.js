@@ -4,9 +4,15 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_FILE = path.join(__dirname, 'database.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+
+// ── Persistent disk path (Render) or local fallback ──
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const DB_FILE = path.join(DATA_DIR, 'database.json');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
 const sessions = new Map();
 function generateToken() { return crypto.randomBytes(32).toString('hex'); }
 // ── JSON Database ──
@@ -208,7 +214,9 @@ app.delete('/api/jobs/:id/photos', requireOffice, (req,res)=>{
     const idx = arr.findIndex(p=>p.url===url);
     if(idx>=0){
       arr.splice(idx,1);
-      const filepath = path.join(__dirname, url);
+      // Delete file from persistent disk
+      const filename = url.replace('/uploads/', '');
+      const filepath = path.join(UPLOADS_DIR, filename);
       if(fs.existsSync(filepath)) fs.unlinkSync(filepath);
     }
   }
@@ -269,6 +277,7 @@ app.listen(PORT,'0.0.0.0',()=>{
   console.log('  Gestionale G.C. srl  avviato!');
   console.log('========================================');
   console.log('  http://localhost:'+PORT);
+  console.log('  Data dir: '+DATA_DIR);
   console.log('  PIN default: Ufficio 0000 | Operai 1234');
   console.log('========================================\n');
 });
