@@ -364,6 +364,22 @@ app.get('/api/my-schedule/:workerId', requireAuth, (req,res)=>{
   const jobs=db.jobs.filter(j=>j.worker_id===parseInt(req.params.workerId)&&j.date===date).sort((a,b)=>a.time.localeCompare(b.time));
   res.json({worker:worker?{id:worker.id,name:worker.name,spec:worker.spec,color:worker.color}:null,date,jobs});
 });
+// ── Stato del disco (solo ufficio): utile per capire se lo spazio sta finendo ──
+app.get('/api/disk-status', requireOffice, (req,res)=>{
+  const sizeOf = (dir) => { let t=0; try { for (const f of fs.readdirSync(dir)) { const p=path.join(dir,f); const s=fs.statSync(p); t += s.isDirectory()? sizeOf(p) : s.size; } } catch(e) {} return t; };
+  const mb = (n) => Math.round(n/1024/1024*10)/10;
+  let free = null;
+  try { const st = fs.statfsSync(DATA_DIR); free = mb(st.bavail * st.bsize); } catch(e) {}
+  res.json({ cartella_dati: DATA_DIR, database_mb: mb(fs.existsSync(DB_FILE)?fs.statSync(DB_FILE).size:0), foto_mb: mb(sizeOf(UPLOADS_DIR)), backup_mb: mb(sizeOf(BACKUP_DIR)), spazio_libero_mb: free });
+});
+// ── Gestione errori: messaggio chiaro invece di un generico errore 500 ──
+app.use((err, req, res, next) => {
+  console.error('Errore:', err.code || '', err.message);
+  const msg = err.code === 'ENOSPC' ? 'Spazio su disco esaurito: il dato NON e\' stato salvato. Liberare spazio (foto vecchie) o ampliare il disco su Render.'
+            : err.code === 'EROFS' || err.code === 'EACCES' ? 'Impossibile scrivere sul disco dati (' + err.code + ')'
+            : 'Salvataggio non riuscito: ' + err.message;
+  res.status(500).json({ error: msg });
+});
 // ── Start ──
 app.listen(PORT,'0.0.0.0',()=>{
   console.log('\n========================================');
