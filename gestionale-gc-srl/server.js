@@ -16,14 +16,99 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 const sessions = new Map();
 function generateToken() { return crypto.randomBytes(32).toString('hex'); }
 // ── JSON Database ──
-function loadDB() {
-  try { if (fs.existsSync(DB_FILE)) return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch(e) { console.error('DB error:', e.message); }
-  return null;
+// Regole di sicurezza:
+//  1. il file viene scritto in modo atomico (prima su un file temporaneo, poi rinominato):
+//     un riavvio a meta' scrittura non puo' piu' lasciare un database.json troncato;
+//  2. una copia giornaliera del database viene tenuta in DATA_DIR/backups (ultime 30);
+//  3. se database.json risulta illeggibile NON viene sovrascritto: viene messo da parte
+//     come database.corrotto-<data>.json e si riparte dal backup piu' recente.
+//     Il database di esempio viene creato solo se non e' mai esistito nessun dato.
+const BACKUP_DIR = path.join(DATA_DIR, 'backups');
+if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+const BACKUP_KEEP = 30;
+
+function isValidDB(db) { return db && Array.isArray(db.workers) && Array.isArray(db.jobs); }
+function readJSON(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+function listBackups() {
+  try {
+    return fs.readdirSync(BACKUP_DIR).filter(f => /^database-\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
+  } catch(e) { return []; }
 }
-function saveDB(data) { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8'); }
+function dailyBackup() {
+  // Copia il database buono di oggi, una sola volta al giorno, prima di sovrascriverlo.
+  if (!fs.existsSync(DB_FILE)) return;
+  const today = new Date().toISOString().slice(0,10);
+  const target = path.join(BACKUP_DIR, `database-${today}.json`);
+  if (fs.existsSync(target)) return;
+  try {
+    const current = readJSON(DB_FILE);
+    if (!isValidDB(current)) return;           // non copiare un file gia' rovinato
+    fs.copyFileSync(DB_FILE, target);
+    const old = listBackups();
+    while (old.length > BACKUP_KEEP) fs.unlinkSync(path.join(BACKUP_DIR, old.shift()));
+    console.log('Backup giornaliero creato: ' + target);
+  } catch(e) { console.error('Backup non riuscito:', e.message); }
+}
+const PREV_FILE = path.join(DATA_DIR, 'database.prev.json');   // ultima versione buona prima dell'ultimo salvataggio
+function keepPrevious() {
+  try {
+    if (fs.existsSync(DB_FILE) && isValidDB(readJSON(DB_FILE))) fs.copyFileSync(DB_FILE, PREV_FILE);
+  } catch(e) {}
+}
+function saveDB(data) {
+  dailyBackup();
+  keepPrevious();
+  const tmp = DB_FILE + '.tmp';
+  const fd = fs.openSync(tmp, 'w');
+  try {
+    fs.writeSync(fd, JSON.stringify(data, null, 2), 0, 'utf8');
+    fs.fsyncSync(fd);
+  } finally { fs.closeSync(fd); }
+  fs.renameSync(tmp, DB_FILE);               // il rename e' atomico: o vecchio file o nuovo, mai a meta'
+}
+function loadDB() {
+  if (!fs.existsSync(DB_FILE)) return null;
+  try {
+    const db = readJSON(DB_FILE);
+    if (isValidDB(db)) return db;
+    throw new Error('struttura non valida');
+  } catch(e) {
+    console.error('DB error: database.json illeggibile (' + e.message + ')');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const aside = path.join(DATA_DIR, `database.corrotto-${stamp}.json`);
+    try { fs.renameSync(DB_FILE, aside); console.error('File messo da parte in ' + aside); } catch(e2) {}
+    // Candidati per il ripristino, dal piu' recente al piu' vecchio
+    const candidates = [PREV_FILE, ...listBackups().reverse().map(b => path.join(BACKUP_DIR, b))];
+    for (const file of candidates) {
+      try {
+        if (!fs.existsSync(file)) continue;
+        const db = readJSON(file);
+        if (isValidDB(db)) {
+          console.error('Ripristinato da ' + path.basename(file));
+          saveDB(db);                            // riscrive subito un database.json sano
+          return db;
+        }
+      } catch(e3) {}
+    }
+    console.error('ATTENZIONE: nessuna copia valida trovata');
+    return null;
+  }
+}
 function getDB() {
   let db = loadDB();
-  if (!db) { db = createDefaultDB(); saveDB(db); console.log('Database inizializzato'); }
+  if (!db) {
+    const hadData = fs.readdirSync(DATA_DIR).some(f => f.startsWith('database.corrotto-')) || listBackups().length > 0;
+    if (hadData) {
+      // Esistevano dati veri ma nessuna copia leggibile: meglio un database vuoto
+      // che riempire il gestionale di interventi inventati.
+      db = { workers: [{ id:1, name:'Ufficio', role:'ufficio', spec:'Direzione', color:'#2563eb', pin:'0000', active:true }], jobs: [], nextWorkerId: 2, nextJobId: 1 };
+      console.error('Database ricreato VUOTO. Recuperare i dati dallo snapshot del disco Render o dal file database.corrotto-*.json');
+    } else {
+      db = createDefaultDB();
+      console.log('Database di esempio inizializzato (primo avvio)');
+    }
+    saveDB(db);
+  }
   return db;
 }
 function createDefaultDB() {
@@ -222,6 +307,14 @@ app.delete('/api/jobs/:id/photos', requireOffice, (req,res)=>{
   }
   saveDB(db);
   res.json({ok:true});
+});
+// ── Backup manuale (solo ufficio): scarica una copia di database.json ──
+app.get('/api/backup', requireOffice, (req,res)=>{
+  const db=getDB();
+  const name=`gestionale-gc-backup-${new Date().toISOString().slice(0,10)}.json`;
+  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(db, null, 2));
 });
 // ── Search ──
 app.get('/api/search', requireAuth, (req,res)=>{

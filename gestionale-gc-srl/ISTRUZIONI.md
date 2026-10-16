@@ -65,8 +65,21 @@ Per cambiare PIN: clicca sul tuo nome in alto a destra > "Cambia PIN"
 - Solo l'ufficio puo' creare, modificare ed eliminare interventi
 - Le sessioni sono protette con token crittografici
 
-## Backup
-Il database e' nel file `database.json`. Copiatelo periodicamente per sicurezza.
+## Backup e protezione dei dati
+Il database e' nel file `database.json`, nella cartella dati (`DATA_DIR`, su Render il disco persistente).
+
+Protezioni automatiche (dal 16/10/2026):
+- il file viene scritto in modo atomico: un riavvio durante il salvataggio non puo' piu' rovinarlo
+- `database.prev.json` e' la copia della versione precedente all'ultimo salvataggio
+- in `backups/` viene tenuta una copia al giorno (`database-AAAA-MM-GG.json`), le ultime 30
+- se `database.json` risulta illeggibile NON viene sovrascritto: viene rinominato in
+  `database.corrotto-<data>.json` e il programma riparte da `database.prev.json` o dal backup piu' recente
+- il database di esempio viene creato solo al primissimo avvio, mai sopra dati esistenti
+
+Backup manuale: dall'account Ufficio, menu in alto a destra > "Scarica backup" (scarica il file JSON).
+
+Rete di sicurezza esterna: Render fa uno snapshot del disco ogni 24 ore e lo conserva 7 giorni
+(scheda Disks del servizio > Snapshots > Restore).
 
 ## Note su Render.com (piano gratuito)
 - L'app si "addormenta" dopo 15 minuti di inattivita' e si risveglia al primo accesso (ci mette circa 30 secondi)
